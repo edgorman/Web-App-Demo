@@ -27,13 +27,9 @@ class CICDEventUsecase:
         """
         # Generate a list of files changed between commits
         try:
-            files_changed = self.__git_handler.get_files_changed(
-                start_commit, end_commit
-            )
+            files_changed = self.__git_handler.get_files_changed(start_commit, end_commit)
         except Exception as e:
-            raise Exception(
-                "Error occurred while getting files changed between commits"
-            ) from e
+            raise Exception("Error occurred while getting files changed between commits") from e
 
         # Generate a set of files from the parent cicd folder to submit
         cicd_files = set()

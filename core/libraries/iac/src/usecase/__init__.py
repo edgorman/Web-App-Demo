@@ -11,9 +11,7 @@ from .__release import ReleaseUsecase
 
 def __init_handlers() -> tuple[GitHandler, WorkflowSubmitHandler]:
     git_handler = new_github_git_handler(GitHubGitHandlerConfig())
-    workflow_submit_handler = new_k8s_workflow_submit_handler(
-        K8sWorkflowSubmitHandlerConfig()
-    )
+    workflow_submit_handler = new_k8s_workflow_submit_handler(K8sWorkflowSubmitHandlerConfig())
 
     return git_handler, workflow_submit_handler
 

@@ -5,4 +5,4 @@ ADD . /app
 WORKDIR /app
 RUN uv sync --frozen
 
-ENTRYPOINT [ "uv", "run", "iac"]
+ENTRYPOINT [ "iac" ]
