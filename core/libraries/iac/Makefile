@@ -1,6 +1,19 @@
 .PHONY: init
-init: ## Install the virtual environment
-	@echo "Creating virtual environment using uv"
+init: ## Virtual environment setup
+	@echo "Creating virtual environment from pyproject"
+	@uv venv .venv --python 3.13
+	@uv pip install -r pyproject.toml
+
+.PHONY: init-extras
+init-extras: ## Virtual environment setup with optional extras
+	@echo "Creating virtual environment from pyproject"
+	@uv venv .venv --python 3.13
+	@uv pip install -r pyproject.toml --all-extras
+
+.PHONY: init-lock
+init-lock: ## Virtual environment setup from uv lock
+	@echo "Creating virtual environment from pyproject"
+	@uv venv .venv --python 3.13
 	@uv sync
 
 .PHONY: test

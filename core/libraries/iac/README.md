@@ -9,7 +9,7 @@ Install [uv](https://docs.astral.sh/uv/getting-started/installation/) if you hav
 Then create your virtual environment by running:
 
 ```bash
-make install
+make init-extras
 ```
 
 ## Usage

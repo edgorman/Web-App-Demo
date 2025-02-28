@@ -3,6 +3,6 @@ COPY --from=ghcr.io/astral-sh/uv:latest /uv /bin/uv
 
 ADD . /app
 WORKDIR /app
-RUN uv sync --frozen
+RUN make init-lock
 
 ENTRYPOINT [ "iac" ]
