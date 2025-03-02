@@ -6,11 +6,13 @@ Infrastructure as code library for the Web App Demo.
 
 Install [uv](https://docs.astral.sh/uv/getting-started/installation/) if you haven't already.
 
-Then create your virtual environment by running:
+Then, create your virtual environment by running:
 
 ```bash
 make init-extras
 ```
+
+Next, make a copy of the file [.env.example](.env.example), rename the new file to `.env`, and update the values inside as needed.
 
 ## Usage
 

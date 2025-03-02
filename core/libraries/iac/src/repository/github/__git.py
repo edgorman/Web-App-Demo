@@ -1,4 +1,6 @@
-from typing import List
+from typing import List, Tuple
+
+from semver import Version
 
 from config.config import GitHubGitHandlerConfig
 from repository.git import GitEventType, GitHandler
@@ -22,6 +24,7 @@ class GitHubGitHandler(GitHandler):
         Returns:
            list of files that were changed between the commits
         """
+        raise NotImplementedError("get_files_changed is not implemented")
 
     def get_cicd_files(self, file_path: str, event_type: GitEventType) -> List[str]:
         """Get the parent cicd files for a given file path and cicd event.
@@ -32,22 +35,37 @@ class GitHubGitHandler(GitHandler):
         Returns:
             list of files in the parent cicd folder
         """
+        raise NotImplementedError("get_cicd_files is not implemented")
 
-    def get_previous_push(self, identifier: str) -> str:
-        """Get the previous push commit for a given history identifier (e.g. SHA, HEAD).
+    def get_pull_request_commits(self, number: int) -> Tuple[str, str]:
+        """Get the start/end commit from pull-request event.
 
         Args:
-            identifier: the history identifier of the current commit
+            number: the number of the pull-request
+        Returns:
+            the start commit
+            the end commit
+        """
+        raise NotImplementedError("get_pull_request_commits is not implemented")
+
+    def get_previous_push_commit(self, commit: str, branch: str) -> str:
+        """Get the start commit from push event.
+
+        Args:
+            commit: the latest commit that was pushed
+            branch: the branch to get commits from
         Returns:
             the previous push commit
         """
         # git rev-parse HEAD~1 # example
+        raise NotImplementedError("get_previous_push_commit is not implemented")
 
-    def get_previous_release(self, identifier: str) -> str:
-        """Get the previous release for a given release version.
+    def get_previous_release_commit(self, version: Version) -> str:
+        """Get the previous commit from release event.
 
         Args:
-            release: the release identifier of the current release
+            version: the version of the release
         Returns:
             the previous release
         """
+        raise NotImplementedError("get_previous_release_commit is not implemented")

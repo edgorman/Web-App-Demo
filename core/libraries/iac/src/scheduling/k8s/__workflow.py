@@ -17,3 +17,4 @@ class K8sWorkflowSubmitHandler(WorkflowSubmitHandler):
         Args:
             file_path: the file path to the workflow for submission
         """
+        raise NotImplementedError("submit is not implemented")

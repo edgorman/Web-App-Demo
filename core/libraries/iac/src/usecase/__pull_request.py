@@ -11,11 +11,15 @@ class PullRequestUsecase(CICDEventUsecase):
     ) -> None:
         super().__init__(git_handler, workflow_submit_handler)
 
-    def run(self, start_commit: str, end_commit: str) -> None:
-        """Run the CICD event usecase for a pull request event.
+    def run(self, number: int) -> None:
+        """Run the CICD event usecase for a pull-request event.
 
         Args:
-            start_commit: the start commit to get changes from
-            end_commit: the end commit to get changes until
+            number: the number of the pull-request
         """
+        try:
+            start_commit, end_commit = self._git_handler.get_pull_request_commits(number)
+        except Exception as e:
+            raise Exception(f"Couldn't get the start/end commit from pull-request event: {str(e)}")
+
         super().run(start_commit, end_commit, GitEventType.PULL_REQUEST)

@@ -1,4 +1,4 @@
-from repository.git import GIT_HEAD_IDENTIFIER, GitEventType, GitHandler
+from repository.git import GitEventType, GitHandler
 from scheduling.workflow import WorkflowSubmitHandler
 from usecase.__cicd_event import CICDEventUsecase
 
@@ -11,15 +11,15 @@ class ReleaseUsecase(CICDEventUsecase):
     ) -> None:
         super().__init__(git_handler, workflow_submit_handler)
 
-    def run(self, commit: str) -> None:
+    def run(self, version: str) -> None:
         """Run the CICD event usecase for a release event.
 
         Args:
-            commit: the release commit to get changes from
+            version: the release version to get changes from
         """
         try:
-            start_commit = self.__git_handler.get_previous_release(commit)
+            start_commit = self._git_handler.get_previous_release_commit(version)
         except Exception as e:
-            raise Exception("Couldn't get the start commit from the release event") from e
+            raise Exception(f"Couldn't get the previous commit from release event: {str(e)}")
 
-        super().run(start_commit, commit, GitEventType.RELEASE)
+        super().run(start_commit, version, GitEventType.RELEASE)

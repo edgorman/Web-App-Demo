@@ -1,8 +1,8 @@
 from abc import ABC, abstractmethod
 from enum import Enum
-from typing import List
+from typing import List, Tuple
 
-GIT_HEAD_IDENTIFIER = "HEAD"
+from semver import Version
 
 
 class GitEventType(Enum):
@@ -23,13 +23,17 @@ class GitFileHandler(ABC):
 
 class GitHistoryHandler(ABC):
     @abstractmethod
-    def get_previous_push(self, identifier: str) -> str:
-        """Get the previous push commit for a given history identifier (e.g. SHA, HEAD)."""
+    def get_pull_request_commits(self, number: int) -> Tuple[str, str]:
+        """Get the start/end commit from pull-request event."""
 
     @abstractmethod
-    def get_previous_release(self, identifier: str) -> str:
-        """Get the previous release for a given release version."""
+    def get_previous_push_commit(self, commit: str, branch: str) -> str:
+        """Get the start commit from push event."""
+
+    @abstractmethod
+    def get_previous_release_commit(self, version: Version) -> str:
+        """Get the previous commit from release event."""
 
 
 class GitHandler(GitFileHandler, GitHistoryHandler):
-    """A collection of interfaces that a Git handler must implement"""
+    """A collection of interfaces that a Git handler must implement."""

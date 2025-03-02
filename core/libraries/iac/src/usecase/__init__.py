@@ -1,3 +1,4 @@
+from cli.context import Context
 from config.config import GitHubGitHandlerConfig, K8sWorkflowSubmitHandlerConfig
 from repository.git import GitHandler
 from repository.github import new_github_git_handler
@@ -16,7 +17,7 @@ def __init_handlers() -> tuple[GitHandler, WorkflowSubmitHandler]:
     return git_handler, workflow_submit_handler
 
 
-def new_pull_request_usecase() -> PullRequestUsecase:
+def new_pull_request_usecase(ctx: Context) -> PullRequestUsecase:
     try:
         git_handler, workflow_submit_handler = __init_handlers()
     except Exception as e:
@@ -25,7 +26,7 @@ def new_pull_request_usecase() -> PullRequestUsecase:
     return PullRequestUsecase(git_handler, workflow_submit_handler)
 
 
-def new_push_usecase() -> PushUsecase:
+def new_push_usecase(ctx: Context) -> PushUsecase:
     try:
         git_handler, workflow_submit_handler = __init_handlers()
     except Exception as e:
@@ -34,7 +35,7 @@ def new_push_usecase() -> PushUsecase:
     return PushUsecase(git_handler, workflow_submit_handler)
 
 
-def new_release_usecase() -> ReleaseUsecase:
+def new_release_usecase(ctx: Context) -> ReleaseUsecase:
     try:
         git_handler, workflow_submit_handler = __init_handlers()
     except Exception as e:

@@ -1,4 +1,4 @@
-from repository.git import GIT_HEAD_IDENTIFIER, GitEventType, GitHandler
+from repository.git import GitEventType, GitHandler
 from scheduling.workflow import WorkflowSubmitHandler
 from usecase.__cicd_event import CICDEventUsecase
 
@@ -11,15 +11,16 @@ class PushUsecase(CICDEventUsecase):
     ) -> None:
         super().__init__(git_handler, workflow_submit_handler)
 
-    def run(self, commit: str) -> None:
+    def run(self, commit: str, branch: str) -> None:
         """Run the CICD event usecase for a push event.
 
         Args:
             commit: the push commit to get changes from
+            branch: the branch the push was made to
         """
         try:
-            start_commit = self.__git_handler.get_previous_push(GIT_HEAD_IDENTIFIER)
+            start_commit = self._git_handler.get_previous_push_commit(commit, branch)
         except Exception as e:
-            raise Exception("Couldn't get the start commit from the push event") from e
+            raise Exception(f"Couldn't get the start commit from push event: {str(e)}")
 
         super().run(start_commit, commit, GitEventType.PUSH)

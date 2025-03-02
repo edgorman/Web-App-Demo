@@ -1,22 +1,17 @@
 import click
 
-from config.cli import set_verbose
+from cli.context import global_options
 
-from .__commands import pull_request, push, release
+from .__pull_request import pull_request
+from .__push import push
+from .__release import release
 
 
 @click.group()
-@click.argument("commit", required=True)
-@click.option(
-    "--verbose",
-    is_flag=True,
-    help="Enable verbose output.",
-    expose_value=False,
-    callback=set_verbose,
-)
+@global_options
 @click.pass_context
-def cicd(ctx: dict, commit: str) -> None:
-    ctx.obj.commit = commit
+def cicd(ctx: dict, verbose: bool) -> None:
+    """The group of commands related to CICD events."""
 
 
 # Add subcommands here
