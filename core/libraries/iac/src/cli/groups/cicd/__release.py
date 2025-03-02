@@ -1,8 +1,8 @@
 import click
 from semver import Version
 
-from cli.context import global_options
-from cli.types import SemanticVersionParamType
+from cli.__context import global_options
+from cli.__types import SemanticVersionParamType
 from usecase import new_release_usecase
 
 

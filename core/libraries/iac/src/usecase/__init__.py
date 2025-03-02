@@ -1,4 +1,4 @@
-from cli.context import Context
+from cli.__context import Context
 from config.config import GitHubGitHandlerConfig, K8sWorkflowSubmitHandlerConfig
 from repository.git import GitHandler
 from repository.github import new_github_git_handler

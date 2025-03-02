@@ -1,6 +1,6 @@
 import click
 
-from cli.context import global_options
+from cli.__context import global_options
 
 from .__pull_request import pull_request
 from .__push import push

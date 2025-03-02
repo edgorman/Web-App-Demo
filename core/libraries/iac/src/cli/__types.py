@@ -14,7 +14,7 @@ class PositiveNumberParamType(click.ParamType):
             self.fail(f"Must be a number, got {value!r}.", param, ctx)
 
         if value <= 0:
-            self.fail(f"Mmuch be a positive non-zero number.", param, ctx)
+            self.fail(f"Must be a positive non-zero number, got {value!r}.", param, ctx)
 
         return value
 
@@ -26,7 +26,7 @@ class SemanticVersionParamType(click.ParamType):
         try:
             value = Version.parse(value)
         except Exception:
-            self.fail(f"Must be a valid semantic version, got {value!r}", param, ctx)
+            self.fail(f"Must be a valid semantic version, got {value!r}.", param, ctx)
 
         return value
 

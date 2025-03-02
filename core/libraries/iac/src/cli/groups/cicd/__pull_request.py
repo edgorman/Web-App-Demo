@@ -1,7 +1,7 @@
 import click
 
-from cli.context import global_options
-from cli.types import PositiveNumberParamType
+from cli.__context import global_options
+from cli.__types import PositiveNumberParamType
 from usecase import new_pull_request_usecase
 
 

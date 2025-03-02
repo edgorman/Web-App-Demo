@@ -1,6 +1,6 @@
 import click
 
-from cli.context import global_options
+from cli.__context import global_options
 from cli.groups.cicd import cicd
 
 
