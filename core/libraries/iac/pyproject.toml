@@ -1,0 +1,55 @@
+[project]
+name = "iac"
+version = "0.1.0"
+description = "Infrastructure as code library for the Web App Demo."
+authors = [{ name = "edgorman" }]
+readme = "README.md"
+keywords = [
+    "python",
+    "iac",
+    "core",
+    "web-app-demo"
+]
+requires-python = ">=3.13,<4.0"
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "Programming Language :: Python :: >=3.13",
+    "Programming Language :: Python :: <4.0",
+]
+dependencies = [
+    "click>=8.1.8",
+    "python-decouple>=3.8",
+    "semver>=3.0.4",
+]
+
+[project.scripts]
+iac = "cli.main:cli"
+
+[project.urls]
+Homepage = "https://github.com/Web-App-Demo/core/libraries/iac/README.md"
+Repository = "https://github.com/edgorman/Web-App-Demo/core/libraries/iac"
+Documentation = "https://github.com/Web-App-Demo/core/libraries/iac/README.md"
+
+[project.optional-dependencies]
+test = [
+    "pytest>=8.3.4",
+]
+lint = [
+    "black>=25.1.0",
+    "isort>=6.0.1",
+    "ruff>=0.9.9",
+]
+
+[build-system]
+requires = ["setuptools >= 61.0"]
+build-backend = "setuptools.build_meta"
+
+[tool.isort]
+line_length = 120
+
+[tool.black]
+line-length = 120
+
+[tool.ruff]
+line-length = 120
