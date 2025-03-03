@@ -1,4 +1,4 @@
-from config.config import K8sWorkflowSubmitHandlerConfig
+from config import K8sWorkflowSubmitHandlerConfig
 
 from .__workflow import K8sWorkflowSubmitHandler
 

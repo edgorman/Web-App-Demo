@@ -1,7 +1,7 @@
 import click
 
+from cli.__commands.cicd import cicd
 from cli.__context import global_options
-from cli.groups.cicd import cicd
 
 
 @click.group()

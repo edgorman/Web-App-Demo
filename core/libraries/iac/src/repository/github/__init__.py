@@ -1,4 +1,4 @@
-from config.config import GitHubGitHandlerConfig
+from config import GitHubGitHandlerConfig
 
 from .__git import GitHubGitHandler
 

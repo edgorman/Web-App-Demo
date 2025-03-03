@@ -2,7 +2,7 @@ import click
 
 from cli.__context import global_options
 from cli.__types import PositiveNumberParamType
-from usecase import new_pull_request_usecase
+from usecase.cicd import new_pull_request_usecase
 
 
 @click.command()

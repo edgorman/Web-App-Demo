@@ -2,7 +2,7 @@ from typing import List, Tuple
 
 from semver import Version
 
-from config.config import GitHubGitHandlerConfig
+from config import GitHubGitHandlerConfig
 from repository.git import GitEventType, GitHandler
 
 

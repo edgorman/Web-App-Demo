@@ -2,7 +2,7 @@ import click
 
 from cli.__context import global_options
 from cli.__types import SHA1ParamType
-from usecase import new_push_usecase
+from usecase.cicd import new_push_usecase
 
 
 @click.command()

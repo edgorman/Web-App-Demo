@@ -3,7 +3,7 @@ from semver import Version
 
 from cli.__context import global_options
 from cli.__types import SemanticVersionParamType
-from usecase import new_release_usecase
+from usecase.cicd import new_release_usecase
 
 
 @click.command()

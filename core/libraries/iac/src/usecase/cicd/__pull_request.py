@@ -1,6 +1,7 @@
 from repository.git import GitEventType, GitHandler
 from scheduling.workflow import WorkflowSubmitHandler
-from usecase.__cicd_event import CICDEventUsecase
+
+from .__event import CICDEventUsecase
 
 
 class PullRequestUsecase(CICDEventUsecase):
