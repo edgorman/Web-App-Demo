@@ -1,0 +1,129 @@
+name: Trigger CICD
+
+on:
+  push:
+    branches:
+      - main
+      - develop
+  pull-request:
+    branches:
+      - main
+      - develop
+  release:
+    branches:
+      - main
+      - develop
+
+jobs:
+  trigger-cicd:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Authenticate GCP
+        uses: google-github-actions/auth@v1
+        with:
+          credentials_json: ${{ secrets.GCP_CREDENTIALS }}
+
+      - name: Configure Docker
+        run: |
+          gcloud auth configure-docker REGION-docker.pkg.dev
+
+      - name: Trigger CICD
+        run: |
+          docker pull REGION-docker.pkg.dev/PROJECT_ID/REPOSITORY_NAME/IMAGE_NAME:TAG
+          docker run REGION-docker.pkg.dev/PROJECT_ID/REPOSITORY_NAME/IMAGE_NAME:TAG --rm \
+            cicd \
+            ${{ github.sha }} \
+            ${{ github.event_name }}
+
+      # - name: Set environment
+      #   run: |
+      #     echo "Setting environment..."
+
+      #     if [[ "${{ github.ref_name }}" == "main" ]]; then
+      #       kubectl config use-context prod
+      #     else
+      #       kubectl config use-context dev
+      #     fi
+
+      #     if [ $? -eq 1 ]; then
+      #         echo "Error setting environment..."
+      #         exit 1
+      #     fi
+
+      #     echo "Finished setting environment"
+
+      # - name: Submit jobs
+      #   run: |
+      #     echo "Submitting jobs..."
+
+      #     CICD_DIRECTORY="${{ inputs.path }}/cicd/${{ env.event_type }}"
+      #     SUBMITTED_JOBS=()
+          
+      #     echo "Checking directory $CICD_DIRECTORY..."
+      #     if [[ -d "$CICD_DIRECTORY" ]]; then
+
+      #       for CICD_FILEPATH in $CICD_DIRECTORY/*.y*ml; do
+      #         echo "Submitting job $CICD_FILEPATH in namespace ${{ inputs.domain }}..."
+      #         SUBMITTED_JOB=$(kubectl apply -f "$CICD_FILEPATH" -n ${{ inputs.domain }} -o jsonpath='{.metadata.name}')
+
+      #         if [ $? -eq 0 ]; then
+      #             echo "Submitted job $SUBMITTED_JOB successfully"
+      #         else
+      #             echo "Error submitting job..."
+      #             exit 1
+      #         fi
+
+      #         SUBMITTED_JOBS += (SUBMITTED_JOB)
+      #       done
+      #     fi
+
+      #     echo "SUBMITTED_JOBS=$SUBMITTED_JOBS" >> $GITHUB_ENV
+      #     echo "Finished submitting jobs"
+
+      #     if [[ ${#SUBMITTED_JOBS[@]} -eq 0 ]]; then
+      #       echo "No jobs to submit, exiting..."
+      #       exit 0
+      #     fi
+
+      # - name: Monitor jobs
+      #   env:
+      #     SUBMITTED_JOBS: ${{ env.SUBMITTED_JOBS }}
+      #   run: |
+      #     echo "Monitoring jobs..."
+
+      #     IFS=$'\n' read -r -a SUBMITTED_JOBS <<< "$SUBMITTED_JOBS"
+
+      #     while [[ ${#SUBMITTED_JOBS[@]} -gt 0 ]]; do
+      #       echo "Jobs remaining: ${SUBMITTED_JOBS[*]}"
+      #       NEW_SUBMITTED_JOBS=()
+
+      #       for SUBMITTED_JOB in "${SUBMITTED_JOBS[@]}"; do
+      #         echo "Checking status of Job: $SUBMITTED_JOB"
+
+      #         STATUS=$(kubectl get job $SUBMITTED_JOB -n ${{ inputs.domain }} -o jsonpath='{.status.conditions[?(@.type=="Complete")].status}' || echo "")
+      #         FAILED=$(kubectl get job $SUBMITTED_JOB -n ${{ inputs.domain }} -o jsonpath='{.status.failed}' || echo "0")
+
+      #         if [[ "$STATUS" == "True" ]]; then
+      #           echo "Job $SUBMITTED_JOB completed successfully."
+      #         elif [[ "$FAILED" -gt 0 ]]; then
+      #           echo "Job $SUBMITTED_JOB failed."
+      #           kubectl logs job/$SUBMITTED_JOB -n ${{ inputs.domain }} || echo "Failed to fetch logs for $SUBMITTED_JOB"
+      #         else
+      #           echo "Job $SUBMITTED_JOB is still running. Keeping it in the monitoring list."
+      #           NEW_SUBMITTED_JOBS+=("$SUBMITTED_JOB")
+      #         fi
+      #       done
+
+      #       # Update JOB_ARRAY with the remaining jobs to monitor
+      #       SUBMITTED_JOBS=("${NEW_SUBMITTED_JOBS[@]}")
+
+      #       if [[ ${#SUBMITTED_JOBS[@]} -gt 0 ]]; then
+      #         echo "Waiting 10 seconds before checking again..."
+      #         sleep 10
+      #       fi
+      #     done
+
+      #     echo "Finished monitoring jobs"

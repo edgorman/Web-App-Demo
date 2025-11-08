@@ -2,7 +2,7 @@ from decouple import config
 
 
 class GitHubGitHandlerConfig:
-    ACCESS_TOKEN = config("GITHUB_ACCESS_TOKEN")
+    GITHUB_REPOSITORY_URL = config("GITHUB_REPOSITORY_URL")
 
 
 class K8sWorkflowSubmitHandlerConfig:

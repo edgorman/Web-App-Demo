@@ -22,6 +22,6 @@ class PushUsecase(CICDEventUsecase):
         try:
             start_commit = self._git_handler.get_previous_push_commit(commit, branch)
         except Exception as e:
-            raise Exception(f"Couldn't get the start commit from push event: {str(e)}")
+            raise Exception(f"Could not get the start commit from push event: {str(e)}")
 
         super().run(start_commit, commit, GitEventType.PUSH)

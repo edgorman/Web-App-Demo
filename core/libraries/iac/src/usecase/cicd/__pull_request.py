@@ -21,6 +21,6 @@ class PullRequestUsecase(CICDEventUsecase):
         try:
             start_commit, end_commit = self._git_handler.get_pull_request_commits(number)
         except Exception as e:
-            raise Exception(f"Couldn't get the start/end commit from pull-request event: {str(e)}")
+            raise Exception(f"Could not get the start/end commit from pull-request event: {str(e)}")
 
         super().run(start_commit, end_commit, GitEventType.PULL_REQUEST)

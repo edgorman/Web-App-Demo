@@ -1,19 +1,19 @@
 from typing import List, Tuple
 
+from git import Repo
 from semver import Version
 
-from config import GitHubGitHandlerConfig
 from repository.git import GitEventType, GitHandler
 
 
 class GitHubGitHandler(GitHandler):
-    def __init__(self, config: GitHubGitHandlerConfig) -> None:
-        """Initialise a GitHubGitFileHandler class
+    def __init__(self, repository: Repo) -> None:
+        """Initialise a GitHubGitHandler class
 
         Args:
-            config: the config needed to initialise the handler
+            repository: the GitPython repository object
         """
-        self.__access_token = config.ACCESS_TOKEN  # example
+        self.__repository = repository
 
     def get_files_changed(self, start_commit: str, end_commit: str) -> List[str]:
         """Get a list of file by their absolute file path that have changed between two commits.
@@ -24,7 +24,17 @@ class GitHubGitHandler(GitHandler):
         Returns:
            list of files that were changed between the commits
         """
-        raise NotImplementedError("get_files_changed is not implemented")
+        try:
+            diff = self.__repository.commit(start_commit).diff(end_commit)
+        except Exception as e:
+            raise Exception("Could not get diff from start/end commit.") from e
+
+        if len(diff) == 0:
+            raise Exception("No diff could be generated for start/end commit.")
+
+        files = set(sum([(d.a_path, d.b_path) for d in diff]))
+
+        return files
 
     def get_cicd_files(self, file_path: str, event_type: GitEventType) -> List[str]:
         """Get the parent cicd files for a given file path and cicd event.

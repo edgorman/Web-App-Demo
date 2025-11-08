@@ -21,6 +21,6 @@ class ReleaseUsecase(CICDEventUsecase):
         try:
             start_commit = self._git_handler.get_previous_release_commit(version)
         except Exception as e:
-            raise Exception(f"Couldn't get the previous commit from release event: {str(e)}")
+            raise Exception(f"Could not get the previous commit from release event: {str(e)}")
 
         super().run(start_commit, version, GitEventType.RELEASE)
