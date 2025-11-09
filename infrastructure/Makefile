@@ -113,6 +113,12 @@ validate: ## Validate Terraform configuration
 	@echo "$(BLUE)Validating Terraform configuration...$(NC)"
 	@terraform validate
 
+upgrade: ## Upgrade Terraform provider versions
+	$(call require_env_detected)
+	@DETECTED_ENV=$$(grep '"bucket"' .terraform/terraform.tfstate 2>/dev/null | sed 's/.*: "\(.*\)-terraform-state".*/\1/' | sed 's/.*-\([^-]*\)$$/\1/'); \
+	echo "$(BLUE)Upgrading Terraform providers for $$DETECTED_ENV environment...$(NC)"; \
+	terraform init -upgrade -backend-config=config/backend/$${DETECTED_ENV}.tfbackend
+
 test: lint validate ## Run linting and validation tests
 	@echo "$(GREEN)All tests passed!$(NC)"
 
