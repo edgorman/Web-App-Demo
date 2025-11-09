@@ -3,7 +3,7 @@ resource "google_storage_bucket" "terraform_state_bucket" {
 
   name                        = "${var.gcp_project_id}-terraform-state"
   location                    = "EU"
-  force_destroy               = false
+  force_destroy               = true
   public_access_prevention    = "enforced"
   uniform_bucket_level_access = true
 
