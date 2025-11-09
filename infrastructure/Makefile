@@ -65,7 +65,7 @@ help: ## Show this help message
 init: ## Initialize Terraform with backend configuration (ENV required)
 	$(call require_env,init)
 	@echo "$(BLUE)Initializing Terraform for $(ENV) environment...$(NC)"
-	@terraform init -reconfigure -backend-config=config/backend/$(ENV).tfbackend
+	@terraform init -reconfigure -backend-config=config/state/$(ENV).tfbackend
 
 bootstrap: ## First-time setup of infrastructure (ENV required)
 	$(call require_env,bootstrap)
@@ -90,7 +90,7 @@ bootstrap: ## First-time setup of infrastructure (ENV required)
 	@mv providers.tf.bak providers.tf
 	@echo ""
 	@echo "$(YELLOW)Step 6: Migrating state to GCS backend$(NC)"
-	@terraform init -migrate-state -force-copy -backend-config=config/backend/$(ENV).tfbackend
+	@terraform init -migrate-state -force-copy -backend-config=config/state/$(ENV).tfbackend
 	@echo ""
 	@echo "$(YELLOW)Step 7: Cleaning up temporary files$(NC)"
 	@rm -f terraform.tfstate terraform.tfstate.backup
@@ -117,7 +117,7 @@ upgrade: ## Upgrade Terraform provider versions
 	$(call require_env_detected)
 	@DETECTED_ENV=$$(grep '"bucket"' .terraform/terraform.tfstate 2>/dev/null | sed 's/.*: "\(.*\)-terraform-state".*/\1/' | sed 's/.*-\([^-]*\)$$/\1/'); \
 	echo "$(BLUE)Upgrading Terraform providers for $$DETECTED_ENV environment...$(NC)"; \
-	terraform init -upgrade -backend-config=config/backend/$${DETECTED_ENV}.tfbackend
+	terraform init -upgrade -backend-config=config/state/$${DETECTED_ENV}.tfbackend
 
 test: lint validate ## Run linting and validation tests
 	@echo "$(GREEN)All tests passed!$(NC)"

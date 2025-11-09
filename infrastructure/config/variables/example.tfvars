@@ -1,8 +1,8 @@
 gcp_project_id     = "your-project-id"
 gcp_default_region = "your-region"
 gcp_default_zone   = "your-zone"
-environment = "production"
-developers  = {
+environment        = "production"
+developers = {
   "your-email@example.com" = {
     terraform_role  = "admin"
     github_username = "your-github-username"

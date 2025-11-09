@@ -52,10 +52,10 @@ resource "github_repository_collaborators" "users" {
 resource "github_branch_protection" "branch_protection" {
   repository_id = data.github_repository.repository.node_id
   pattern       = var.github_protected_branch
-  
+
   require_signed_commits          = true
-  require_conversation_resolution = true 
-  
+  require_conversation_resolution = true
+
   required_pull_request_reviews {
     dismiss_stale_reviews           = true
     required_approving_review_count = 1

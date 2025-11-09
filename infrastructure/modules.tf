@@ -6,7 +6,7 @@ module "core" {
   gcp_default_zone   = var.gcp_default_zone
 
   terraform_state_admins = [for email, user in var.developers : email if user.terraform_role == "admin"]
-  
+
   github_access_token                            = var.github_access_token
   github_repository_admins                       = [for email, user in var.developers : user.github_username if user.github_role == "admin"]
   github_repository_developers                   = [for email, user in var.developers : user.github_username if user.github_role == "developer"]

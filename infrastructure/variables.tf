@@ -43,4 +43,5 @@ variable "github_access_token" {
 
 variable "github_protected_branch" {
   description = "The GitHub branch that is protected by this terraform environment"
+  type        = string
 }
