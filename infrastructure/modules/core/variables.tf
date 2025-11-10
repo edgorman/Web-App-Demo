@@ -28,8 +28,8 @@ variable "terraform_state_admins" {
   sensitive   = true
 }
 
-variable "github_access_token" {
-  description = "The oauth token used to grant provider access to the GitHub repository"
+variable "github_provider_token" {
+  description = "The token used to grant provider access to the GitHub repository"
   type        = string
   sensitive   = true
 }
@@ -66,12 +66,12 @@ variable "github_repository_viewers" {
   sensitive   = true
 }
 
-variable "github_protected_branch" {
-  description = "The GitHub branch that is protected by this terraform environment"
+variable "github_target_branch" {
+  description = "The target branch for this terraform configuration"
   type        = string
 }
 
-variable "github_protected_branch_require_admin_approval" {
-  description = "Whether the GitHub protected branch requires admin approval"
+variable "github_target_branch_require_admin_approval" {
+  description = "Whether the target branch requires admin approval"
   type        = bool
 }

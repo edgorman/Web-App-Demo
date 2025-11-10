@@ -21,6 +21,6 @@ provider "google" {
 }
 
 provider "github" {
-  token = var.github_access_token
+  token = var.github_provider_token
   owner = var.github_repository_owner
 }

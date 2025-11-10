@@ -9,5 +9,5 @@ developers = {
     github_role     = "owner"
   }
 }
-github_access_token     = "github_pat_..."
-github_protected_branch = "main"
+github_provider_token = "github_pat_..."
+github_target_branch  = "main"
