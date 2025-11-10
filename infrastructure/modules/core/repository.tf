@@ -35,7 +35,7 @@ resource "github_repository_collaborators" "users" {
 
 resource "github_branch_protection" "branch_protection" {
   repository_id = data.github_repository.repository.node_id
-  pattern       = var.github_protected_branch
+  pattern       = var.github_target_branch
 
   require_signed_commits          = true
   require_conversation_resolution = true
@@ -43,6 +43,6 @@ resource "github_branch_protection" "branch_protection" {
   required_pull_request_reviews {
     dismiss_stale_reviews           = true
     required_approving_review_count = 1
-    require_code_owner_reviews      = var.github_protected_branch_require_admin_approval
+    require_code_owner_reviews      = var.github_target_branch_require_admin_approval
   }
 }

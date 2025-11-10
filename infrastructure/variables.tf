@@ -35,13 +35,13 @@ variable "developers" {
   sensitive = true
 }
 
-variable "github_access_token" {
-  description = "The access token used to grant provider access to the GitHub repository"
+variable "github_provider_token" {
+  description = "The token used to grant provider access to the GitHub repository"
   type        = string
   sensitive   = true
 }
 
-variable "github_protected_branch" {
+variable "github_target_branch" {
   description = "The GitHub branch that is protected by this terraform environment"
   type        = string
 }

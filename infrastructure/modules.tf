@@ -7,10 +7,10 @@ module "core" {
 
   terraform_state_admins = [for email, user in var.developers : email if user.terraform_role == "admin"]
 
-  github_access_token                            = var.github_access_token
-  github_repository_admins                       = [for email, user in var.developers : user.github_username if user.github_role == "admin"]
-  github_repository_developers                   = [for email, user in var.developers : user.github_username if user.github_role == "developer"]
-  github_repository_viewers                      = [for email, user in var.developers : user.github_username if user.github_role == "viewer"]
-  github_protected_branch                        = var.github_protected_branch
-  github_protected_branch_require_admin_approval = var.environment == "production"
+  github_provider_token                       = var.github_provider_token
+  github_repository_admins                    = [for email, user in var.developers : user.github_username if user.github_role == "admin"]
+  github_repository_developers                = [for email, user in var.developers : user.github_username if user.github_role == "developer"]
+  github_repository_viewers                   = [for email, user in var.developers : user.github_username if user.github_role == "viewer"]
+  github_target_branch                        = var.github_target_branch
+  github_target_branch_require_admin_approval = var.environment == "production"
 }
