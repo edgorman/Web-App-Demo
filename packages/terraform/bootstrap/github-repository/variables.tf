@@ -4,13 +4,7 @@ variable "provider_token" {
   sensitive   = true
 }
 
-variable "owner" {
-  description = "The name of the owner of the GitHub repository"
-  type        = string
-  default     = "edgorman"
-}
-
-variable "name" {
+variable "repository_name" {
   description = "The name of the GitHub repository"
   type        = string
   default     = "Web-App-Demo"
@@ -20,12 +14,6 @@ variable "description" {
   description = "The description of the GitHub repository"
   type        = string
   default     = "A demo for a cloud configured web app delpoyed on the google cloud platform."
-}
-
-variable "default_branch" {
-  description = "The default branch of the GitHub repository"
-  type        = string
-  default     = "main"
 }
 
 variable "admin_usernames" {
@@ -46,4 +34,18 @@ variable "viewer_usernames" {
   type        = list(string)
   default     = []
   sensitive   = true
+}
+
+variable "branches" {
+  description = "The branch in GitHub to configure with the Terraform configuration"
+  type        = list(
+    object(
+      {
+        name = string
+        default_branch = optional(bool, false)
+        review_count = optional(number, 1)
+        code_owner_approval = optional(bool, true)
+      }
+    )
+  )
 }

@@ -41,10 +41,30 @@ variable "github_provider_token" {
   sensitive   = true
 }
 
-variable "github_repository_admin_usernames" {
+variable "github_admin_usernames" {
   description = "The set of developers with admin permissions to the GitHub repository"
   type        = list(string)
   sensitive   = true
+}
+
+variable "github_branches" {
+  description = "The branch in GitHub to configure with the Terraform configuration"
+  type = list(
+    object(
+      {
+        name                = string
+        default_branch      = optional(bool, false)
+        review_count        = optional(number, 1)
+        code_owner_approval = optional(bool, true)
+      }
+    )
+  )
+  default = [
+    {
+      name           = "main"
+      default_branch = true
+    }
+  ]
 }
 
 variable "terraform_remote_states" {
@@ -53,11 +73,21 @@ variable "terraform_remote_states" {
     object(
       {
         name_suffix = string
-        admin_emails = list(string)
-        location = optional(string, "EU")
-        viewers_emails = optional(list(string), [])
+        location    = optional(string, "EU")
       }
     )
   )
-  sensitive = true
+}
+
+variable "terraform_admin_emails" {
+  description = "The set of developers with admin permissions to the Terraform remote states"
+  type        = list(string)
+  sensitive   = true
+}
+
+variable "terraform_viewer_emails" {
+  description = "The set of developers with viewer permissions to the Terraform remote states"
+  type        = list(string)
+  sensitive   = true
+  default     = []
 }

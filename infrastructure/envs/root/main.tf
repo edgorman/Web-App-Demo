@@ -10,7 +10,8 @@ module "github-repository" {
   source = "../../../packages/terraform/bootstrap/github-repository"
 
   provider_token  = var.github_provider_token
-  admin_usernames = var.github_repository_admin_usernames
+  admin_usernames = var.github_admin_usernames
+  branches        = var.github_branches
 }
 
 module "terraform-states" {
@@ -18,4 +19,6 @@ module "terraform-states" {
 
   gcp_project_id = var.gcp_root_project_id
   remote_states  = var.terraform_remote_states
+  admin_emails   = var.terraform_admin_emails
+  viewer_emails  = var.terraform_viewer_emails
 }
