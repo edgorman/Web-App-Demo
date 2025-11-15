@@ -1,0 +1,41 @@
+gcp_root_project_id = "your-root-gcp-project-name"
+gcp_root_region = "europe-west1"
+gcp_root_zone = "europe-west1-b"
+gcp_projects_base_id = "your-gcp-project-base-name"
+gcp_projects = [
+  {
+    name_suffix = "develop"
+    id_suffix = "dev"
+  },
+  {
+    name_suffix = "production"
+    id_suffix = "prod"
+  }
+]
+github_provider_token = "github_pat_..."
+github_admin_usernames = [ "github-username" ]  # don't include repository owner here
+github_branches = [
+  {
+    name = "main"
+    default_branch = true
+    code_owner_approval = true
+  },
+  {
+    name = "develop"
+    default_branch = false
+    code_owner_approval = true
+  }
+]
+terraform_remote_states = [
+  {
+    name_suffix = "root"
+  },
+  {
+    name_suffix = "dev"
+  },
+  {
+    name_suffix = "prod"
+  }
+]
+terraform_admin_emails = [ "your-email@example.com" ]
+terraform_viewer_emails = [ ]
