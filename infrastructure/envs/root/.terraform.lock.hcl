@@ -3,7 +3,7 @@
 
 provider "registry.terraform.io/hashicorp/google" {
   version     = "7.10.0"
-  constraints = "7.10.0"
+  constraints = "7.10.0, ~> 7.10"
   hashes = [
     "h1:5nI7o1CcDgcuj4E3l3L+7xs/hv0oAhRIh1BHMVcGzns=",
     "zh:40b90c1e6cc95cccfc935d4af4478590410bf2ce24d2cd7f6b583e7791b9b5b3",
@@ -23,7 +23,7 @@ provider "registry.terraform.io/hashicorp/google" {
 
 provider "registry.terraform.io/integrations/github" {
   version     = "6.7.5"
-  constraints = "6.7.5"
+  constraints = "~> 6.7, 6.7.5"
   hashes = [
     "h1:rjBBNd1AT8tYk65AgALeXdirRW5gXvqTOjTJ7lJQXHA=",
     "zh:145558e41d53b23aecb0e10ecd46fb446a37aaaf343b255162c681938a01fda3",

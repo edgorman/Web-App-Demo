@@ -1,0 +1,28 @@
+gcp_root_project_id = "your-root-gcp-project-name"
+gcp_projects_base_id = "your-gcp-project-base-name"
+gcp_projects = [
+  {
+    name_suffix = "develop"
+    id_suffix = "dev"
+  },
+  {
+    name_suffix = "production"
+    id_suffix = "prod"
+  }
+]
+github_provider_token = "github_pat_..."
+github_repository_admin_emails = [ "your-github-username" ]
+terraform_remote_states = [
+  {
+    name_suffix = "root"
+    admin_emails = [ "your-email@example.com" ]
+  },
+  {
+    name_suffix = "dev"
+    admin_emails = [ "your-email@example.com" ]
+  },
+  {
+    name_suffix = "prod"
+    admin_emails = [ "your-email@example.com" ]
+  }
+]

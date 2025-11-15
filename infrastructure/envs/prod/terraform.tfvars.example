@@ -1,0 +1,2 @@
+github_provider_token = "github_pat_..."
+github_target_branch  = "main"

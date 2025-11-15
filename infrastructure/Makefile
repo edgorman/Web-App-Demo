@@ -7,69 +7,25 @@ YELLOW := \033[0;33m
 RED := \033[0;31m
 NC := \033[0m
 
-# Helper to get current environment (either from ENV variable or detect from .terraform)
-define get_env
-$(if $(ENV),$(ENV),$(shell if [ -f .terraform/terraform.tfstate ]; then \
-	grep '"bucket"' .terraform/terraform.tfstate 2>/dev/null | \
-	sed 's/.*: "\(.*\)-terraform-state".*/\1/' | \
-	sed 's/.*-\([^-]*\)$$/\1/'; \
-fi))
-endef
-
-# Helper function to check if ENV is provided (for init/bootstrap)
-define require_env
-	@if [ -z "$(ENV)" ]; then \
-		echo "$(RED)Error: ENV is required. Usage: make $(1) ENV=[dev|prod]$(NC)"; \
-		exit 1; \
-	fi
-endef
-
-# Helper function to check if ENV can be detected (for plan/apply/etc)
-define require_env_detected
-	@DETECTED_ENV=$$(if [ -f .terraform/terraform.tfstate ]; then \
-		grep '"bucket"' .terraform/terraform.tfstate 2>/dev/null | \
-		sed 's/.*: "\(.*\)-terraform-state".*/\1/' | \
-		sed 's/.*-\([^-]*\)$$/\1/'; \
-	fi); \
-	if [ -z "$$DETECTED_ENV" ]; then \
-		echo "$(RED)Error: No environment detected. Run 'make init ENV=[dev|prod]' first.$(NC)"; \
-		exit 1; \
-	fi
-endef
-
 help: ## Show this help message
 	@echo "$(BLUE)Terraform Infrastructure Makefile$(NC)"
 	@echo ""
-	@DETECTED_ENV=$$(if [ -f .terraform/terraform.tfstate ]; then \
-		grep '"bucket"' .terraform/terraform.tfstate 2>/dev/null | \
-		sed 's/.*: "\(.*\)-terraform-state".*/\1/' | \
-		sed 's/.*-\([^-]*\)$$/\1/'; \
-	fi); \
-	if [ -n "$$DETECTED_ENV" ]; then \
-		echo "$(GREEN)Current environment: $$DETECTED_ENV$(NC)"; \
-		echo ""; \
-	else \
-		echo "$(YELLOW)No environment detected. Run 'make init ENV=[dev|prod]' first.$(NC)"; \
-		echo ""; \
-	fi
-	@echo "Usage: make [target] ENV=[dev|prod]"
+	@echo "Usage: make [target]"
 	@echo ""
 	@echo "Available targets:"
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "  $(GREEN)%-20s$(NC) %s\n", $$1, $$2}'
 	@echo ""
 	@echo "Examples:"
-	@echo "  make init ENV=dev"
+	@echo "  make init"
 	@echo "  make plan"
 	@echo "  make apply"
 
-init: ## Initialize Terraform with backend configuration (ENV required)
-	$(call require_env,init)
-	@echo "$(BLUE)Initializing Terraform for $(ENV) environment...$(NC)"
-	@terraform init -reconfigure -backend-config=config/state/$(ENV).tfbackend
+init: ## Initialize Terraform (with backend configuration)
+	@echo "$(BLUE)Initializing Terraform with backend...$(NC)"
+	@terraform init -backend-config=terraform.tfbackend
 
-bootstrap: ## First-time setup of infrastructure (ENV required)
-	$(call require_env,bootstrap)
-	@echo "$(BLUE)Running first-time setup for $(ENV) environment...$(NC)"
+bootstrap: ## First-time setup of infrastructure
+	@echo "$(BLUE)Running first-time setup for environment...$(NC)"
 	@echo "$(YELLOW)This will create GCS bucket and enable required APIs$(NC)"
 	@echo ""
 	@echo "$(YELLOW)Step 1: Cleaning up any existing backend state$(NC)"
@@ -84,13 +40,13 @@ bootstrap: ## First-time setup of infrastructure (ENV required)
 	@terraform init
 	@echo ""
 	@echo "$(YELLOW)Step 4: Creating backend infrastructure$(NC)"
-	@terraform apply -target=module.core -var-file=config/variables/$(ENV).tfvars
+	@terraform apply -var-file=terraform.tfvars
 	@echo ""
 	@echo "$(YELLOW)Step 5: Restoring backend configuration$(NC)"
 	@mv providers.tf.bak providers.tf
 	@echo ""
 	@echo "$(YELLOW)Step 6: Migrating state to GCS backend$(NC)"
-	@terraform init -migrate-state -force-copy -backend-config=config/state/$(ENV).tfbackend
+	@terraform init -migrate-state -force-copy -backend-config=terraform.tfbackend
 	@echo ""
 	@echo "$(YELLOW)Step 7: Cleaning up temporary files$(NC)"
 	@rm -f terraform.tfstate terraform.tfstate.backup
@@ -109,42 +65,28 @@ format: ## Format Terraform files
 	terraform fmt -recursive
 
 validate: ## Validate Terraform configuration
-	$(call require_env_detected)
 	@echo "$(BLUE)Validating Terraform configuration...$(NC)"
 	@terraform validate
 
 upgrade: ## Upgrade Terraform provider versions
-	$(call require_env_detected)
-	@DETECTED_ENV=$$(grep '"bucket"' .terraform/terraform.tfstate 2>/dev/null | sed 's/.*: "\(.*\)-terraform-state".*/\1/' | sed 's/.*-\([^-]*\)$$/\1/'); \
-	echo "$(BLUE)Upgrading Terraform providers for $$DETECTED_ENV environment...$(NC)"; \
-	terraform init -upgrade -backend-config=config/state/$${DETECTED_ENV}.tfbackend
-
-test: lint validate ## Run linting and validation tests
-	@echo "$(GREEN)All tests passed!$(NC)"
+	@echo "$(BLUE)Upgrading Terraform providers...$(NC)"; \
+	terraform init -upgrade -backend-config=terraform.tfbackend
 
 plan: ## Create Terraform execution plan
-	$(call require_env_detected)
-	@DETECTED_ENV=$$(grep '"bucket"' .terraform/terraform.tfstate 2>/dev/null | sed 's/.*: "\(.*\)-terraform-state".*/\1/' | sed 's/.*-\([^-]*\)$$/\1/'); \
-	echo "$(BLUE)Creating Terraform plan for $$DETECTED_ENV environment...$(NC)"; \
-	terraform plan -var-file=config/variables/$${DETECTED_ENV}.tfvars
+	@echo "$(BLUE)Creating Terraform plan...$(NC)"; \
+	terraform plan -var-file=terraform.tfvars
 
 apply: ## Apply Terraform changes
-	$(call require_env_detected)
-	@DETECTED_ENV=$$(grep '"bucket"' .terraform/terraform.tfstate 2>/dev/null | sed 's/.*: "\(.*\)-terraform-state".*/\1/' | sed 's/.*-\([^-]*\)$$/\1/'); \
-	echo "$(YELLOW)Applying Terraform changes for $$DETECTED_ENV environment...$(NC)"; \
-	terraform apply -var-file=config/variables/$${DETECTED_ENV}.tfvars
+	@echo "$(YELLOW)Applying Terraform changes...$(NC)"; \
+	terraform apply -var-file=terraform.tfvars
 
 destroy: ## Destroy Terraform-managed infrastructure
-	$(call require_env_detected)
-	@DETECTED_ENV=$$(grep '"bucket"' .terraform/terraform.tfstate 2>/dev/null | sed 's/.*: "\(.*\)-terraform-state".*/\1/' | sed 's/.*-\([^-]*\)$$/\1/'); \
-	echo "$(YELLOW)WARNING: This will destroy infrastructure in $$DETECTED_ENV environment!$(NC)"; \
-	terraform destroy -var-file=config/variables/$${DETECTED_ENV}.tfvars
+	@echo "$(YELLOW)WARNING: This will destroy infrastructure...$(NC)"; \
+	terraform destroy -var-file=terraform.tfvars
 
 refresh: ## Refresh Terraform state
-	$(call require_env_detected)
-	@DETECTED_ENV=$$(grep '"bucket"' .terraform/terraform.tfstate 2>/dev/null | sed 's/.*: "\(.*\)-terraform-state".*/\1/' | sed 's/.*-\([^-]*\)$$/\1/'); \
-	echo "$(BLUE)Refreshing Terraform state for $$DETECTED_ENV environment...$(NC)"; \
-	terraform refresh -var-file=config/variables/$${DETECTED_ENV}.tfvars
+	@echo "$(BLUE)Refreshing Terraform state for terraform...$(NC)"; \
+	terraform refresh -var-file=terraform.tfvars
 
 show: ## Show current Terraform state
 	@echo "$(BLUE)Showing Terraform state...$(NC)"

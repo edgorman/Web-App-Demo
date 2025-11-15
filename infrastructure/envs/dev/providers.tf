@@ -7,9 +7,12 @@ terraform {
       version = "6.7.5"
     }
   }
+
+  backend "gcs" {
+    bucket = ""
+  }
 }
 
 provider "github" {
   token = var.github_provider_token
-  owner = var.github_repository_owner
 }
