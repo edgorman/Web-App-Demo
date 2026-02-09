@@ -45,10 +45,7 @@ resource "github_repository_ruleset" "branch_rulesets" {
       require_last_push_approval        = true
       required_review_thread_resolution = true
       required_approving_review_count   = 2
-
-      # The allowed merge methods is not available through this block yet
-      # if you want to set specific merge methods per branch it must be done manually
-      # see https://github.com/integrations/terraform-provider-github/issues/2530
+      allowed_merge_methods             = each.value == var.github_default_branch ? ["merge"] : ["squash"]
     }
 
   }
@@ -58,5 +55,13 @@ resource "github_repository_ruleset" "branch_rulesets" {
       include = ["refs/heads/${each.value}"]
       exclude = []
     }
+  }
+
+  # Actor id 5 corresponds to the admin role when type is repository role
+  # see https://registry.terraform.io/providers/integrations/github/latest/docs/resources/repository_ruleset#RepositoryRole-1
+  bypass_actors {
+    actor_id    = "5"
+    actor_type  = "RepositoryRole"
+    bypass_mode = "pull_request"
   }
 }
