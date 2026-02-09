@@ -34,6 +34,12 @@ variable "github_provider_token" {
   sensitive   = true
 }
 
+variable "github_repository_owner" {
+  description = "The owner of the GitHub repository"
+  type        = string
+  default     = "edgorman"
+}
+
 variable "github_repository_name" {
   description = "The name of the GitHub repository"
   type        = string

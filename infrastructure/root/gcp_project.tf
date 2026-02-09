@@ -1,9 +1,3 @@
-resource "google_project_service" "gcp_services" {
-  for_each = toset(["storage.googleapis.com"])
-  project  = var.gcp_provider_project_id
-  service  = each.value
-}
-
 resource "google_project" "root_project" {
   name       = "${var.gcp_project_prefix} root"
   project_id = var.gcp_provider_project_id
@@ -32,9 +26,27 @@ locals {
   )
 }
 
+resource "google_project_service" "project_services" {
+  for_each = {
+    for pair in setproduct(keys(local.all_projects), [
+      "storage.googleapis.com",
+      "secretmanager.googleapis.com",
+      "iam.googleapis.com",
+      "cloudresourcemanager.googleapis.com",
+      "iamcredentials.googleapis.com",
+      "sts.googleapis.com"
+    ]) : "${pair[0]}-${pair[1]}" => {
+      project_id = local.all_projects[pair[0]].project_id
+      service    = pair[1]
+    }
+  }
+  project = each.value.project_id
+  service = each.value.service
+}
+
 resource "google_storage_bucket" "gcp_project_terraform_states" {
   depends_on = [
-    google_project_service.gcp_services,
+    google_project_service.project_services,
     google_project.root_project,
     google_project.env_projects
   ]
