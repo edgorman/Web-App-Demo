@@ -1,0 +1,30 @@
+name: 'GitHub File Diff'
+description: 'Determines which parts of the infrastructure have changed'
+
+outputs:
+  infrastructure-root:
+    description: 'Whether infrastructure root files changed'
+    value: ${{ steps.filter.outputs.infrastructure-root }}
+  infrastructure-prod:
+    description: 'Whether infrastructure prod files changed'
+    value: ${{ steps.filter.outputs.infrastructure-prod }}
+  infrastructure-dev:
+    description: 'Whether infrastructure dev files changed'
+    value: ${{ steps.filter.outputs.infrastructure-dev }}
+
+runs:
+  using: "composite"
+  steps:
+    - uses: dorny/paths-filter@v3
+      id: filter
+      with:
+        filters: |
+          infrastructure-root:
+            - 'infrastructure/config/root/**'
+            - 'infrastructure/root/**'
+          infrastructure-prod:
+            - 'infrastructure/config/prod/**'
+            - 'infrastructure/env/**'
+          infrastructure-dev:
+            - 'infrastructure/config/dev/**'
+            - 'infrastructure/env/**'

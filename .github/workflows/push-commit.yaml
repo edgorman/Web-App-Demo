@@ -1,0 +1,99 @@
+name: 'Push Commit'
+
+on:
+  push:
+    branches:
+      - main
+      - develop
+
+permissions:
+  contents: read
+
+jobs:
+  diff:
+    runs-on: ubuntu-latest
+    outputs:
+      infrastructure-root: ${{ steps.diff.outputs.infrastructure-root }}
+      infrastructure-prod: ${{ steps.diff.outputs.infrastructure-prod }}
+      infrastructure-dev: ${{ steps.diff.outputs.infrastructure-dev }}
+    steps:
+      - uses: actions/checkout@v5
+      - id: diff
+        uses: ./.github/actions/github-file-diff
+
+  infrastructure-root:
+    needs: diff
+    if: needs.diff.outputs.infrastructure-root == 'true' && github.ref_name == 'main'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@v5
+      - id: secrets
+        uses: ./.github/actions/gcp-secret-manager
+        with:
+          project_id: ${{ vars.ROOT_PROJECT_ID }}
+          workload_identity_provider: ${{ vars.WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: ${{ vars.SERVICE_ACCOUNT }}
+          secrets_list: |
+            TF_VAR_github_provider_token=github_provider_token
+      - uses: ./.github/actions/terraform-push-commit
+        with:
+          terraform_directory: 'infrastructure/root'
+          config_directory: 'infrastructure/config/root'
+          secrets: ${{ steps.secrets.outputs.secrets }}
+
+  infrastructure-prod:
+    needs: [diff, infrastructure-root]
+    if: |
+      always() &&
+      needs.diff.result == 'success' &&
+      needs.diff.outputs.infrastructure-prod == 'true' &&
+      github.ref_name == 'main' &&
+      (needs.infrastructure-root.result == 'success' || needs.infrastructure-root.result == 'skipped')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@v5
+      - id: secrets
+        uses: ./.github/actions/gcp-secret-manager
+        with:
+          project_id: 'web-app-demo-prod'
+          workload_identity_provider: ${{ vars.WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: ${{ vars.SERVICE_ACCOUNT }}
+          secrets_list: ""
+      - uses: ./.github/actions/terraform-push-commit
+        with:
+          terraform_directory: 'infrastructure/env'
+          config_directory: 'infrastructure/config/prod'
+          secrets: ${{ steps.secrets.outputs.secrets }}
+
+  infrastructure-dev:
+    needs: [diff, infrastructure-root]
+    if: |
+      always() &&
+      needs.diff.result == 'success' &&
+      needs.diff.outputs.infrastructure-dev == 'true' &&
+      github.ref_name == 'develop' &&
+      (needs.infrastructure-root.result == 'success' || needs.infrastructure-root.result == 'skipped')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@v5
+      - id: secrets
+        uses: ./.github/actions/gcp-secret-manager
+        with:
+          project_id: 'web-app-demo-dev'
+          workload_identity_provider: ${{ vars.WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: ${{ vars.SERVICE_ACCOUNT }}
+          secrets_list: ""
+      - uses: ./.github/actions/terraform-push-commit
+        with:
+          terraform_directory: 'infrastructure/env'
+          config_directory: 'infrastructure/config/dev'
+          secrets: ${{ steps.secrets.outputs.secrets }}
