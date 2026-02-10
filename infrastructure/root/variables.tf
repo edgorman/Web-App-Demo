@@ -25,13 +25,19 @@ variable "gcp_project_prefix" {
 variable "gcp_projects" {
   description = "A list of GCP projects to create"
   type        = list(string)
-  default     = [ "dev", "prod" ]
+  default     = ["dev", "prod"]
 }
 
 variable "github_provider_token" {
   description = "The token used to grant provider access to the GitHub repository"
   type        = string
   sensitive   = true
+}
+
+variable "github_repository_owner" {
+  description = "The owner of the GitHub repository"
+  type        = string
+  default     = "edgorman"
 }
 
 variable "github_repository_name" {
@@ -49,5 +55,5 @@ variable "github_default_branch" {
 variable "github_env_branches" {
   description = "A list of GitHub branches used in environments"
   type        = list(string)
-  default     = [ "main", "develop" ]
+  default     = ["main", "develop"]
 }

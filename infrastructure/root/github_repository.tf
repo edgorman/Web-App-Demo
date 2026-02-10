@@ -10,21 +10,21 @@ resource "github_repository" "repository" {
 }
 
 resource "github_branch" "env_branches" {
-  depends_on = [ github_repository.repository ]
+  depends_on = [github_repository.repository]
   for_each   = toset(var.github_env_branches)
   repository = github_repository.repository.name
   branch     = each.value
 }
 
-resource "github_branch_default" "default_branch"{
-  depends_on = [ github_branch.env_branches ]
+resource "github_branch_default" "default_branch" {
+  depends_on = [github_branch.env_branches]
   repository = github_repository.repository.name
   branch     = var.github_default_branch
 }
 
 resource "github_repository_ruleset" "branch_rulesets" {
   for_each   = toset(var.github_env_branches)
-  depends_on = [ github_branch.env_branches ]
+  depends_on = [github_branch.env_branches]
 
   name        = "${each.value} ruleset"
   repository  = github_repository.repository.name
@@ -64,4 +64,10 @@ resource "github_repository_ruleset" "branch_rulesets" {
     actor_type  = "RepositoryRole"
     bypass_mode = "pull_request"
   }
+}
+
+resource "github_actions_variable" "root_project_id" {
+  repository    = github_repository.repository.name
+  variable_name = "ROOT_PROJECT_ID"
+  value         = var.gcp_provider_project_id
 }
