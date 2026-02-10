@@ -33,9 +33,9 @@ jobs:
       - id: secrets
         uses: ./.github/actions/gcp-secret-manager
         with:
-          project_id: 'web-app-demo-root'
-          workload_identity_provider: 'projects/web-app-demo-root/locations/global/workloadIdentityPools/github-pool/providers/github-provider'
-          service_account: 'github-actions@web-app-demo-root.iam.gserviceaccount.com'
+          project_id: ${{ vars.ROOT_PROJECT_ID }}
+          workload_identity_provider: ${{ vars.WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: ${{ vars.SERVICE_ACCOUNT }}
           secrets_list: |
             TF_VAR_github_provider_token=github_provider_token
       - uses: ./.github/actions/terraform-push-commit
@@ -62,8 +62,8 @@ jobs:
         uses: ./.github/actions/gcp-secret-manager
         with:
           project_id: 'web-app-demo-prod'
-          workload_identity_provider: 'projects/web-app-demo-root/locations/global/workloadIdentityPools/github-pool/providers/github-provider'
-          service_account: 'github-actions@web-app-demo-root.iam.gserviceaccount.com'
+          workload_identity_provider: ${{ vars.WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: ${{ vars.SERVICE_ACCOUNT }}
           secrets_list: ""
       - uses: ./.github/actions/terraform-push-commit
         with:
@@ -89,8 +89,8 @@ jobs:
         uses: ./.github/actions/gcp-secret-manager
         with:
           project_id: 'web-app-demo-dev'
-          workload_identity_provider: 'projects/web-app-demo-root/locations/global/workloadIdentityPools/github-pool/providers/github-provider'
-          service_account: 'github-actions@web-app-demo-root.iam.gserviceaccount.com'
+          workload_identity_provider: ${{ vars.WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: ${{ vars.SERVICE_ACCOUNT }}
           secrets_list: ""
       - uses: ./.github/actions/terraform-push-commit
         with:
