@@ -25,7 +25,7 @@ variable "gcp_project_prefix" {
 variable "gcp_projects" {
   description = "A list of GCP projects to create"
   type        = list(string)
-  default     = [ "dev", "prod" ]
+  default     = ["dev", "prod"]
 }
 
 variable "github_provider_token" {
@@ -55,5 +55,5 @@ variable "github_default_branch" {
 variable "github_env_branches" {
   description = "A list of GitHub branches used in environments"
   type        = list(string)
-  default     = [ "main", "develop" ]
+  default     = ["main", "develop"]
 }
