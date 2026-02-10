@@ -65,3 +65,9 @@ resource "github_repository_ruleset" "branch_rulesets" {
     bypass_mode = "pull_request"
   }
 }
+
+resource "github_actions_variable" "root_project_id" {
+  repository    = github_repository.repository.name
+  variable_name = "ROOT_PROJECT_ID"
+  value         = var.gcp_provider_project_id
+}

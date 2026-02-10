@@ -41,3 +41,15 @@ resource "google_project_iam_member" "github_actions_admin" {
   role     = "roles/editor"
   member   = "serviceAccount:${google_service_account.github_actions.email}"
 }
+
+resource "github_actions_variable" "workload_identity_provider" {
+  repository    = github_repository.repository.name
+  variable_name = "WORKLOAD_IDENTITY_PROVIDER"
+  value         = google_iam_workload_identity_pool_provider.github_provider.name
+}
+
+resource "github_actions_variable" "service_account" {
+  repository    = github_repository.repository.name
+  variable_name = "SERVICE_ACCOUNT"
+  value         = google_service_account.github_actions.email
+}
