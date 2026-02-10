@@ -36,7 +36,8 @@ resource "google_service_account_iam_member" "github_actions_wic" {
 }
 
 resource "google_project_iam_member" "github_actions_admin" {
-  project = var.gcp_provider_project_id
-  role    = "roles/editor" # Or more specific roles as needed
-  member  = "serviceAccount:${google_service_account.github_actions.email}"
+  for_each = local.all_projects
+  project  = each.value.project_id
+  role     = "roles/editor"
+  member   = "serviceAccount:${google_service_account.github_actions.email}"
 }
