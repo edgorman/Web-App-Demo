@@ -53,12 +53,23 @@ jobs:
       github.ref_name == 'main' &&
       (needs.infrastructure-root.result == 'success' || needs.infrastructure-root.result == 'skipped')
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
     steps:
       - uses: actions/checkout@v5
+      - id: secrets
+        uses: ./.github/actions/gcp-secret-manager
+        with:
+          project_id: 'web-app-demo-prod'
+          workload_identity_provider: 'projects/web-app-demo-root/locations/global/workloadIdentityPools/github-pool/providers/github-provider'
+          service_account: 'github-actions@web-app-demo-root.iam.gserviceaccount.com'
+          secrets_list: ""
       - uses: ./.github/actions/terraform-push-commit
         with:
           terraform_directory: 'infrastructure/env'
           config_directory: 'infrastructure/config/prod'
+          secrets: ${{ steps.secrets.outputs.secrets }}
 
   infrastructure-dev:
     needs: [diff, infrastructure-root]
@@ -69,9 +80,20 @@ jobs:
       github.ref_name == 'develop' &&
       (needs.infrastructure-root.result == 'success' || needs.infrastructure-root.result == 'skipped')
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
     steps:
       - uses: actions/checkout@v5
+      - id: secrets
+        uses: ./.github/actions/gcp-secret-manager
+        with:
+          project_id: 'web-app-demo-dev'
+          workload_identity_provider: 'projects/web-app-demo-root/locations/global/workloadIdentityPools/github-pool/providers/github-provider'
+          service_account: 'github-actions@web-app-demo-root.iam.gserviceaccount.com'
+          secrets_list: ""
       - uses: ./.github/actions/terraform-push-commit
         with:
           terraform_directory: 'infrastructure/env'
           config_directory: 'infrastructure/config/dev'
+          secrets: ${{ steps.secrets.outputs.secrets }}
