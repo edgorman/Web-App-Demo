@@ -6,6 +6,7 @@ A basic FastAPI backend service for Web-App-Demo.
 
 - Python 3.13 or higher
 - [uv](https://github.com/astral-sh/uv) package manager
+- Docker (optional, for containerized deployment)
 
 ## Setup
 
@@ -23,6 +24,8 @@ uv sync
 
 ## Running the Service
 
+### Local Development
+
 Start the development server:
 
 ```bash
@@ -36,6 +39,29 @@ uv run uvicorn main:app --reload
 ```
 
 The service will be available at `http://127.0.0.1:8000`
+
+### Docker
+
+Build the Docker image:
+
+```bash
+docker build -t web-app-demo-backend .
+```
+
+Run the container:
+
+```bash
+docker run -d -p 8000:8000 --name backend web-app-demo-backend
+```
+
+The service will be available at `http://localhost:8000`
+
+Stop the container:
+
+```bash
+docker stop backend
+docker rm backend
+```
 
 ## Development
 
