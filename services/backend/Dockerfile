@@ -7,8 +7,10 @@ WORKDIR /app
 # Copy dependency files
 COPY pyproject.toml ./
 
-# Install dependencies using pip
-RUN pip install --no-cache-dir fastapi uvicorn click pydantic
+# Create a minimal setup for installation
+RUN pip install --no-cache-dir --upgrade pip && \
+    pip install --no-cache-dir hatchling && \
+    pip install --no-cache-dir .
 
 # Runtime stage
 FROM python:3.13-slim
@@ -16,8 +18,12 @@ FROM python:3.13-slim
 # Set working directory
 WORKDIR /app
 
+# Get Python version dynamically
+ARG PYTHON_VERSION=3.13
+ENV PYTHON_VERSION=${PYTHON_VERSION}
+
 # Copy installed packages from builder
-COPY --from=builder /usr/local/lib/python3.13/site-packages /usr/local/lib/python3.13/site-packages
+COPY --from=builder /usr/local/lib/python${PYTHON_VERSION}/site-packages /usr/local/lib/python${PYTHON_VERSION}/site-packages
 COPY --from=builder /usr/local/bin /usr/local/bin
 
 # Copy application code
