@@ -1,5 +1,6 @@
 # Build stage - Install dependencies
-FROM python:3.13-slim AS builder
+ARG PYTHON_VERSION=3.13
+FROM python:${PYTHON_VERSION}-slim AS builder
 
 # Set working directory
 WORKDIR /app
@@ -13,12 +14,12 @@ RUN pip install --no-cache-dir --upgrade pip && \
     pip install --no-cache-dir .
 
 # Runtime stage
-FROM python:3.13-slim
+FROM python:${PYTHON_VERSION}-slim
 
 # Set working directory
 WORKDIR /app
 
-# Get Python version dynamically
+# Set Python version environment variable
 ARG PYTHON_VERSION=3.13
 ENV PYTHON_VERSION=${PYTHON_VERSION}
 
