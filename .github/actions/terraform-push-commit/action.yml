@@ -1,5 +1,5 @@
 name: 'Terraform Push Commit'
-description: 'Performs terraform init, fmt, validate, and apply'
+description: 'Performs terraform init and apply'
 
 inputs:
   terraform_directory:
@@ -34,16 +34,6 @@ runs:
       run: |
         terraform init \
           -backend-config="${{ github.workspace }}/${{ inputs.config_directory }}/terraform.tfbackend"
-
-    - name: Terraform Format
-      shell: bash
-      working-directory: ${{ inputs.terraform_directory }}
-      run: terraform fmt -check
-
-    - name: Terraform Validate
-      shell: bash
-      working-directory: ${{ inputs.terraform_directory }}
-      run: terraform validate
 
     - name: Terraform Apply
       shell: bash

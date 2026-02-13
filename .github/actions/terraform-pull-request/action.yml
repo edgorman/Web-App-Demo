@@ -12,6 +12,9 @@ inputs:
     description: 'Newline-separated list of secrets or env vars to export (e.g., KEY=VALUE)'
     required: false
     default: ''
+  github_token:
+    description: 'GitHub token for posting comments'
+    required: true
 
 runs:
   using: "composite"
@@ -46,9 +49,60 @@ runs:
       run: terraform validate
 
     - name: Terraform Plan
+      id: plan
       shell: bash
       working-directory: ${{ inputs.terraform_directory }}
       run: |
         terraform plan \
           -var-file="${{ github.workspace }}/${{ inputs.config_directory }}/terraform.tfvars" \
-          -lock=false
+          -lock=false \
+          -no-color \
+          -out=tfplan.binary
+        terraform show -no-color tfplan.binary > tfplan.txt
+        
+    - name: Post Terraform Plan Comment
+      uses: actions/github-script@v7
+      with:
+        github-token: ${{ inputs.github_token }}
+        script: |
+          const fs = require('fs');
+          const path = require('path');
+          
+          // GitHub comment size limit (with buffer for formatting)
+          const MAX_COMMENT_LENGTH = 65000;
+          
+          // Extract environment name from config_directory (last path component)
+          const configDir = '${{ inputs.config_directory }}';
+          const environmentName = path.basename(configDir);
+          
+          const planPath = path.join('${{ github.workspace }}', '${{ inputs.terraform_directory }}', 'tfplan.txt');
+          const plan = fs.readFileSync(planPath, 'utf8');
+          const truncatedPlan = plan.length > MAX_COMMENT_LENGTH 
+            ? plan.substring(0, MAX_COMMENT_LENGTH) + '\n\n... (output truncated due to length)' 
+            : plan;
+          
+          const output = `### Terraform Plan for \`${environmentName}\` Environment
+          
+          <details>
+          <summary>Show Plan</summary>
+          
+          \`\`\`hcl
+          ${truncatedPlan}
+          \`\`\`
+          
+          </details>
+          
+          *Pusher: @${{ github.actor }}, Action: \`${{ github.event_name }}\`, Working Directory: \`${{ inputs.terraform_directory }}\`, Workflow: \`${{ github.workflow }}\`*`;
+          
+          try {
+            await github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: output
+            });
+            console.log('Successfully posted Terraform plan comment');
+          } catch (error) {
+            core.setFailed(`Failed to post comment: ${error.message}`);
+            throw error;
+          }
