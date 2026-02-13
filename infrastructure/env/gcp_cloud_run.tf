@@ -8,13 +8,13 @@ resource "google_cloud_run_v2_service" "backend" {
       image = var.backend_image
 
       ports {
-        container_port = 8000
+        container_port = var.backend_port
       }
 
       resources {
         limits = {
-          cpu    = "1"
-          memory = "512Mi"
+          cpu    = var.backend_cpu
+          memory = var.backend_memory
         }
       }
     }
@@ -25,18 +25,16 @@ resource "google_cloud_run_v2_service" "backend" {
     }
   }
 
+  # Routes 100% of traffic to the latest revision.
+  # This ensures all requests go to the most recently deployed version.
   traffic {
     type    = "TRAFFIC_TARGET_ALLOCATION_TYPE_LATEST"
     percent = 100
   }
 }
 
-# Allow unauthenticated access to the backend service for demo purposes.
-# For production use cases with sensitive data, consider implementing proper
-# authentication mechanisms such as:
-# - Cloud Run's built-in authentication
-# - API Gateway with API keys
-# - Application-level authentication (OAuth, JWT, etc.)
+# Allow unauthenticated access to the backend service.
+# CORS and authentication/authorization are implemented at the application level.
 resource "google_cloud_run_v2_service_iam_member" "backend_public_access" {
   name     = google_cloud_run_v2_service.backend.name
   location = google_cloud_run_v2_service.backend.location

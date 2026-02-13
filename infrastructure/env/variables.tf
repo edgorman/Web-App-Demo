@@ -20,6 +20,24 @@ variable "backend_service_name" {
   default     = "backend"
 }
 
+variable "backend_port" {
+  description = "The port the backend container listens on"
+  type        = number
+  default     = 8000
+}
+
+variable "backend_cpu" {
+  description = "CPU allocation for the backend service (e.g., '0.5', '1', '2')"
+  type        = string
+  default     = "0.25"
+}
+
+variable "backend_memory" {
+  description = "Memory allocation for the backend service (e.g., '256Mi', '512Mi', '1Gi')"
+  type        = string
+  default     = "256Mi"
+}
+
 variable "backend_min_instances" {
   description = "Minimum number of instances for the backend service (0 for cost savings, 1+ to avoid cold starts)"
   type        = number
