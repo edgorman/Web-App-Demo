@@ -63,8 +63,6 @@ runs:
     - name: Post Terraform Plan Comment
       if: github.event_name == 'pull_request'
       uses: actions/github-script@v7
-      env:
-        PLAN_OUTPUT: ${{ steps.plan.outputs.stdout }}
       with:
         github-token: ${{ inputs.github_token }}
         script: |
@@ -78,7 +76,7 @@ runs:
           <details>
           <summary>Show Plan</summary>
           
-          \`\`\`terraform
+          \`\`\`hcl
           ${truncatedPlan}
           \`\`\`
           
