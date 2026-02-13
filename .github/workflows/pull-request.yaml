@@ -25,7 +25,7 @@ jobs:
 
   infrastructure-root:
     needs: diff
-    if: needs.diff.outputs.infrastructure-root == 'true'
+    if: needs.diff.outputs.infrastructure-root == 'true' && (github.base_ref == 'main' || github.base_ref == 'develop')
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -50,7 +50,7 @@ jobs:
 
   infrastructure-prod:
     needs: diff
-    if: needs.diff.outputs.infrastructure-prod == 'true'
+    if: needs.diff.outputs.infrastructure-prod == 'true' && github.base_ref == 'main'
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -74,7 +74,7 @@ jobs:
 
   infrastructure-dev:
     needs: diff
-    if: needs.diff.outputs.infrastructure-dev == 'true'
+    if: needs.diff.outputs.infrastructure-dev == 'true' && github.base_ref == 'develop'
     runs-on: ubuntu-latest
     permissions:
       contents: read
