@@ -1,12 +1,6 @@
 name: 'Backend Pull Request'
 description: 'Lints, tests, and builds the backend service'
 
-inputs:
-  backend_directory:
-    description: 'The directory containing the backend service'
-    required: true
-    default: 'services/backend'
-
 runs:
   using: "composite"
   steps:
@@ -23,24 +17,24 @@ runs:
 
     - name: Install dependencies
       shell: bash
-      working-directory: ${{ inputs.backend_directory }}
+      working-directory: services/backend
       run: |
-        uv sync --extra dev
+        make install
 
     - name: Lint
       shell: bash
-      working-directory: ${{ inputs.backend_directory }}
+      working-directory: services/backend
       run: |
-        uv run flake8 . --exclude .venv --max-line-length 120
+        make lint
 
     - name: Test
       shell: bash
-      working-directory: ${{ inputs.backend_directory }}
+      working-directory: services/backend
       run: |
-        uv run pytest
+        make test
 
     - name: Build Docker image
       shell: bash
-      working-directory: ${{ inputs.backend_directory }}
+      working-directory: services/backend
       run: |
-        docker build -t web-app-demo-backend:${{ github.sha }} .
+        make docker-build IMAGE_TAG=${{ github.sha }}
