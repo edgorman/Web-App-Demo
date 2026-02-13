@@ -45,7 +45,6 @@ jobs:
         with:
           terraform_directory: 'infrastructure/root'
           config_directory: 'infrastructure/config/root'
-          environment_name: 'root'
           secrets: ${{ steps.secrets.outputs.secrets }}
           github_token: ${{ secrets.GITHUB_TOKEN }}
 
@@ -70,7 +69,6 @@ jobs:
         with:
           terraform_directory: 'infrastructure/env'
           config_directory: 'infrastructure/config/prod'
-          environment_name: 'prod'
           secrets: ${{ steps.secrets.outputs.secrets }}
           github_token: ${{ secrets.GITHUB_TOKEN }}
 
@@ -95,7 +93,6 @@ jobs:
         with:
           terraform_directory: 'infrastructure/env'
           config_directory: 'infrastructure/config/dev'
-          environment_name: 'dev'
           secrets: ${{ steps.secrets.outputs.secrets }}
           github_token: ${{ secrets.GITHUB_TOKEN }}
 

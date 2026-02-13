@@ -8,9 +8,6 @@ inputs:
   config_directory:
     description: 'The directory containing the configuration files (backend and vars)'
     required: true
-  environment_name:
-    description: 'The name of the environment (e.g., root, prod, dev)'
-    required: true
   secrets:
     description: 'Newline-separated list of secrets or env vars to export (e.g., KEY=VALUE)'
     required: false
@@ -74,13 +71,17 @@ runs:
           // GitHub comment size limit (with buffer for formatting)
           const MAX_COMMENT_LENGTH = 65000;
           
+          // Extract environment name from config_directory (last path component)
+          const configDir = '${{ inputs.config_directory }}';
+          const environmentName = path.basename(configDir);
+          
           const planPath = path.join('${{ github.workspace }}', '${{ inputs.terraform_directory }}', 'tfplan.txt');
           const plan = fs.readFileSync(planPath, 'utf8');
           const truncatedPlan = plan.length > MAX_COMMENT_LENGTH 
             ? plan.substring(0, MAX_COMMENT_LENGTH) + '\n\n... (output truncated due to length)' 
             : plan;
           
-          const output = `### Terraform Plan for \`${{ inputs.environment_name }}\` Environment
+          const output = `### Terraform Plan for \`${environmentName}\` Environment
           
           <details>
           <summary>Show Plan</summary>
