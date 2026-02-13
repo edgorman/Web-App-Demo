@@ -16,6 +16,7 @@ jobs:
       infrastructure-root: ${{ steps.diff.outputs.infrastructure-root }}
       infrastructure-prod: ${{ steps.diff.outputs.infrastructure-prod }}
       infrastructure-dev: ${{ steps.diff.outputs.infrastructure-dev }}
+      backend: ${{ steps.diff.outputs.backend }}
     steps:
       - uses: actions/checkout@v5
       - id: diff
@@ -87,3 +88,15 @@ jobs:
           terraform_directory: 'infrastructure/env'
           config_directory: 'infrastructure/config/dev'
           secrets: ${{ steps.secrets.outputs.secrets }}
+
+  backend:
+    needs: diff
+    if: needs.diff.outputs.backend == 'true'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v5
+      - uses: ./.github/actions/backend-pull-request
+        with:
+          backend_directory: 'services/backend'

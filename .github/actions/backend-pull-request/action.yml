@@ -1,0 +1,46 @@
+name: 'Backend Pull Request'
+description: 'Lints, tests, and builds the backend service'
+
+inputs:
+  backend_directory:
+    description: 'The directory containing the backend service'
+    required: true
+    default: 'services/backend'
+
+runs:
+  using: "composite"
+  steps:
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.13'
+
+    - name: Install uv
+      shell: bash
+      run: |
+        curl -LsSf https://astral.sh/uv/install.sh | sh
+        echo "$HOME/.local/bin" >> $GITHUB_PATH
+
+    - name: Install dependencies
+      shell: bash
+      working-directory: ${{ inputs.backend_directory }}
+      run: |
+        uv sync --extra dev
+
+    - name: Lint
+      shell: bash
+      working-directory: ${{ inputs.backend_directory }}
+      run: |
+        uv run flake8 . --exclude .venv --max-line-length 120
+
+    - name: Test
+      shell: bash
+      working-directory: ${{ inputs.backend_directory }}
+      run: |
+        uv run pytest
+
+    - name: Build Docker image
+      shell: bash
+      working-directory: ${{ inputs.backend_directory }}
+      run: |
+        docker build -t web-app-demo-backend:${{ github.sha }} .

@@ -1,5 +1,5 @@
 name: 'GitHub File Diff'
-description: 'Determines which parts of the infrastructure have changed'
+description: 'Determines which parts of the infrastructure and services have changed'
 
 outputs:
   infrastructure-root:
@@ -11,6 +11,9 @@ outputs:
   infrastructure-dev:
     description: 'Whether infrastructure dev files changed'
     value: ${{ steps.filter.outputs.infrastructure-dev }}
+  backend:
+    description: 'Whether backend service files changed'
+    value: ${{ steps.filter.outputs.backend }}
 
 runs:
   using: "composite"
@@ -28,3 +31,5 @@ runs:
           infrastructure-dev:
             - 'infrastructure/config/dev/**'
             - 'infrastructure/env/**'
+          backend:
+            - 'services/backend/**'
