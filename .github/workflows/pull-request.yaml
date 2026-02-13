@@ -8,6 +8,7 @@ on:
 
 permissions:
   contents: read
+  pull-requests: write
 
 jobs:
   diff:
@@ -29,6 +30,7 @@ jobs:
     permissions:
       contents: read
       id-token: write
+      pull-requests: write
     steps:
       - uses: actions/checkout@v5
       - id: secrets
@@ -44,6 +46,7 @@ jobs:
           terraform_directory: 'infrastructure/root'
           config_directory: 'infrastructure/config/root'
           secrets: ${{ steps.secrets.outputs.secrets }}
+          github_token: ${{ secrets.GITHUB_TOKEN }}
 
   infrastructure-prod:
     needs: diff
@@ -52,6 +55,7 @@ jobs:
     permissions:
       contents: read
       id-token: write
+      pull-requests: write
     steps:
       - uses: actions/checkout@v5
       - id: secrets
@@ -66,6 +70,7 @@ jobs:
           terraform_directory: 'infrastructure/env'
           config_directory: 'infrastructure/config/prod'
           secrets: ${{ steps.secrets.outputs.secrets }}
+          github_token: ${{ secrets.GITHUB_TOKEN }}
 
   infrastructure-dev:
     needs: diff
@@ -74,6 +79,7 @@ jobs:
     permissions:
       contents: read
       id-token: write
+      pull-requests: write
     steps:
       - uses: actions/checkout@v5
       - id: secrets
@@ -88,6 +94,7 @@ jobs:
           terraform_directory: 'infrastructure/env'
           config_directory: 'infrastructure/config/dev'
           secrets: ${{ steps.secrets.outputs.secrets }}
+          github_token: ${{ secrets.GITHUB_TOKEN }}
 
   backend:
     needs: diff
