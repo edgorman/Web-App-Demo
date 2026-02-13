@@ -34,7 +34,9 @@ resource "google_project_service" "project_services" {
       "iam.googleapis.com",
       "cloudresourcemanager.googleapis.com",
       "iamcredentials.googleapis.com",
-      "sts.googleapis.com"
+      "sts.googleapis.com",
+      "run.googleapis.com",
+      "artifactregistry.googleapis.com"
       ]) : "${pair[0]}-${pair[1]}" => {
       project_id = local.all_projects[pair[0]].project_id
       service    = pair[1]
