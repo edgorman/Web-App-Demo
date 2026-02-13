@@ -20,8 +20,8 @@ resource "google_cloud_run_v2_service" "backend" {
     }
 
     scaling {
-      min_instance_count = 0
-      max_instance_count = 10
+      min_instance_count = var.backend_min_instances
+      max_instance_count = var.backend_max_instances
     }
   }
 
@@ -31,6 +31,12 @@ resource "google_cloud_run_v2_service" "backend" {
   }
 }
 
+# Allow unauthenticated access to the backend service for demo purposes.
+# For production use cases with sensitive data, consider implementing proper
+# authentication mechanisms such as:
+# - Cloud Run's built-in authentication
+# - API Gateway with API keys
+# - Application-level authentication (OAuth, JWT, etc.)
 resource "google_cloud_run_v2_service_iam_member" "backend_public_access" {
   name     = google_cloud_run_v2_service.backend.name
   location = google_cloud_run_v2_service.backend.location

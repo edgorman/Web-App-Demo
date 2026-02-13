@@ -19,3 +19,15 @@ variable "backend_service_name" {
   type        = string
   default     = "backend"
 }
+
+variable "backend_min_instances" {
+  description = "Minimum number of instances for the backend service (0 for cost savings, 1+ to avoid cold starts)"
+  type        = number
+  default     = 0
+}
+
+variable "backend_max_instances" {
+  description = "Maximum number of instances for the backend service"
+  type        = number
+  default     = 10
+}
