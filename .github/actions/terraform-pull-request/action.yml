@@ -67,9 +67,16 @@ runs:
         github-token: ${{ inputs.github_token }}
         script: |
           const fs = require('fs');
-          const planPath = '${{ inputs.terraform_directory }}/tfplan.txt';
+          const path = require('path');
+          
+          // GitHub comment size limit (with buffer for formatting)
+          const MAX_COMMENT_LENGTH = 65000;
+          
+          const planPath = path.join('${{ github.workspace }}', '${{ inputs.terraform_directory }}', 'tfplan.txt');
           const plan = fs.readFileSync(planPath, 'utf8');
-          const truncatedPlan = plan.length > 65000 ? plan.substring(0, 65000) + '\n\n... (truncated)' : plan;
+          const truncatedPlan = plan.length > MAX_COMMENT_LENGTH 
+            ? plan.substring(0, MAX_COMMENT_LENGTH) + '\n\n... (output truncated due to length)' 
+            : plan;
           
           const output = `### Terraform Plan for \`${{ inputs.terraform_directory }}\`
           
@@ -84,9 +91,15 @@ runs:
           
           *Pusher: @${{ github.actor }}, Action: \`${{ github.event_name }}\`, Working Directory: \`${{ inputs.terraform_directory }}\`, Workflow: \`${{ github.workflow }}\`*`;
           
-          github.rest.issues.createComment({
-            issue_number: context.issue.number,
-            owner: context.repo.owner,
-            repo: context.repo.repo,
-            body: output
-          });
+          try {
+            await github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: output
+            });
+            console.log('Successfully posted Terraform plan comment');
+          } catch (error) {
+            core.setFailed(`Failed to post comment: ${error.message}`);
+            throw error;
+          }
