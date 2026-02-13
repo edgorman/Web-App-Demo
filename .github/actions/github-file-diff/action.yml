@@ -11,9 +11,9 @@ outputs:
   infrastructure-dev:
     description: 'Whether infrastructure dev files changed'
     value: ${{ steps.filter.outputs.infrastructure-dev }}
-  backend:
+  service-backend:
     description: 'Whether backend service files changed'
-    value: ${{ steps.filter.outputs.backend }}
+    value: ${{ steps.filter.outputs.service-backend }}
 
 runs:
   using: "composite"
@@ -31,5 +31,5 @@ runs:
           infrastructure-dev:
             - 'infrastructure/config/dev/**'
             - 'infrastructure/env/**'
-          backend:
+          service-backend:
             - 'services/backend/**'

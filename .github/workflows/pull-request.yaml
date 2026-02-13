@@ -16,7 +16,7 @@ jobs:
       infrastructure-root: ${{ steps.diff.outputs.infrastructure-root }}
       infrastructure-prod: ${{ steps.diff.outputs.infrastructure-prod }}
       infrastructure-dev: ${{ steps.diff.outputs.infrastructure-dev }}
-      backend: ${{ steps.diff.outputs.backend }}
+      service-backend: ${{ steps.diff.outputs.service-backend }}
     steps:
       - uses: actions/checkout@v5
       - id: diff
@@ -91,7 +91,7 @@ jobs:
 
   backend:
     needs: diff
-    if: needs.diff.outputs.backend == 'true'
+    if: needs.diff.outputs.service-backend == 'true'
     runs-on: ubuntu-latest
     permissions:
       contents: read
