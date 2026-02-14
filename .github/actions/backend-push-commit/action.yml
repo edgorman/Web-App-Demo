@@ -1,0 +1,55 @@
+name: 'Backend Push Commit'
+description: 'Builds and deploys the backend service to Cloud Run'
+
+inputs:
+  project_id:
+    description: 'GCP Project ID'
+    required: true
+  region:
+    description: 'GCP Region'
+    required: true
+  workload_identity_provider:
+    description: 'The Workload Identity Provider resource name'
+    required: true
+  service_account:
+    description: 'The Google Service Account email'
+    required: true
+
+runs:
+  using: "composite"
+  steps:
+    - name: Authenticate to Google Cloud
+      uses: google-github-actions/auth@v2
+      with:
+        workload_identity_provider: ${{ inputs.workload_identity_provider }}
+        service_account: ${{ inputs.service_account }}
+
+    - name: Set up Cloud SDK
+      uses: google-github-actions/setup-gcloud@v2
+
+    - name: Configure Docker for Artifact Registry
+      shell: bash
+      run: |
+        gcloud auth configure-docker ${{ inputs.region }}-docker.pkg.dev
+
+    - name: Build Docker image
+      shell: bash
+      working-directory: services/backend
+      run: |
+        docker build -t ${{ inputs.region }}-docker.pkg.dev/${{ inputs.project_id }}/backend/backend:${{ github.sha }} \
+                     -t ${{ inputs.region }}-docker.pkg.dev/${{ inputs.project_id }}/backend/backend:latest .
+
+    - name: Push Docker image
+      shell: bash
+      run: |
+        docker push ${{ inputs.region }}-docker.pkg.dev/${{ inputs.project_id }}/backend/backend:${{ github.sha }}
+        docker push ${{ inputs.region }}-docker.pkg.dev/${{ inputs.project_id }}/backend/backend:latest
+
+    - name: Deploy to Cloud Run
+      shell: bash
+      run: |
+        gcloud run deploy backend \
+          --image=${{ inputs.region }}-docker.pkg.dev/${{ inputs.project_id }}/backend/backend:${{ github.sha }} \
+          --region=${{ inputs.region }} \
+          --project=${{ inputs.project_id }} \
+          --platform=managed
