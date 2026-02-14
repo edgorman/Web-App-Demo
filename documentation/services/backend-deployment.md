@@ -47,13 +47,15 @@ Located in `infrastructure/config/`:
 ## Deployment Process
 
 ### Prerequisites
-1. Container image must be built and pushed to Artifact Registry:
-   - Dev: `europe-west1-docker.pkg.dev/web-app-demo-dev/backend/backend:latest`
-   - Prod: `europe-west1-docker.pkg.dev/web-app-demo-prod/backend/backend:latest`
 
-2. Required GCP APIs must be enabled (handled by root infrastructure):
+The following are automatically managed by Terraform:
+
+1. **Artifact Registry repository**: Created in each environment (dev/prod) to store Docker images
+2. **Required GCP APIs** (handled by environment infrastructure):
    - Cloud Run API (`run.googleapis.com`)
    - Artifact Registry API (`artifactregistry.googleapis.com`)
+
+Container images are automatically built and pushed by GitHub Actions when backend service files are changed.
 
 ### Manual Deployment
 
@@ -74,10 +76,22 @@ terraform apply -var-file=../config/dev/terraform.tfvars
 
 ### Automated Deployment
 
-The backend infrastructure is automatically deployed through GitHub Actions:
-- Changes to `infrastructure/env/` trigger CI/CD workflows
+The backend service is automatically deployed through GitHub Actions:
+- **Infrastructure**: Changes to `infrastructure/env/` or environment config files trigger Terraform deployment workflows
+- **Backend Service**: Changes to `services/backend/**` trigger Docker image build and Cloud Run deployment
 - Merging to `develop` branch deploys to dev environment
 - Merging to `main` branch deploys to prod environment
+
+#### Deployment Flow
+
+When backend service files are changed and pushed:
+
+1. GitHub Actions detects changes in `services/backend/**`
+2. Docker image is built from the service code
+3. Image is pushed to Google Artifact Registry:
+   - Dev: `europe-west1-docker.pkg.dev/web-app-demo-dev/backend/backend:${commit-sha}`
+   - Prod: `europe-west1-docker.pkg.dev/web-app-demo-prod/backend/backend:${commit-sha}`
+4. Cloud Run service is updated with the new image automatically
 
 ## Configuration Variables
 
