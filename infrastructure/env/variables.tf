@@ -33,9 +33,9 @@ variable "backend_cpu" {
 }
 
 variable "backend_memory" {
-  description = "Memory allocation for the backend service (e.g., '256Mi', '512Mi', '1Gi')"
+  description = "Memory allocation for the backend service (e.g., '512Mi', '1Gi', '2Gi')"
   type        = string
-  default     = "256Mi"
+  default     = "512Mi"
 }
 
 variable "backend_min_instances" {
