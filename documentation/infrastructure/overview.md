@@ -31,4 +31,4 @@ See [Backend Service Deployment](../services/backend-deployment.md) for details 
 
 ## Security Model
 - **Workload Identity Federation**: No long-lived GCP service account keys are used. GitHub Actions authenticates via OIDC.
-- **Least Privilege**: The GitHub Actions service account is granted `Editor` and `Cloud Run Admin` access across the projects, with specific `Secret Accessor` roles for sensitive values. The `Cloud Run Admin` role is required to manage IAM policies for Cloud Run services, such as enabling public access.
+- **Least Privilege**: The GitHub Actions service account is created in the root project, and each environment grants it `Editor` and `Cloud Run Admin` roles as needed. The `Cloud Run Admin` role is required to manage IAM policies for Cloud Run services, such as enabling public access.

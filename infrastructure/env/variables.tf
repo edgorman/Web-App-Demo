@@ -49,3 +49,8 @@ variable "backend_max_instances" {
   type        = number
   default     = 10
 }
+
+variable "github_actions_service_account" {
+  description = "The email of the GitHub Actions service account"
+  type        = string
+}

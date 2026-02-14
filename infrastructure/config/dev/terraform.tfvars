@@ -10,3 +10,4 @@ backend_cpu             = "1"     # Minimum CPU required by Cloud Run V2
 backend_memory          = "512Mi" # Minimum memory required by Cloud Run V2 with unthrottled CPU
 backend_min_instances   = 0       # Allow scaling to zero to minimize costs in dev
 backend_max_instances   = 5
+github_actions_service_account = "github-actions@web-app-demo-root.iam.gserviceaccount.com"
