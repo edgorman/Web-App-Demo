@@ -42,6 +42,13 @@ resource "google_project_iam_member" "github_actions_admin" {
   member   = "serviceAccount:${google_service_account.github_actions.email}"
 }
 
+resource "google_project_iam_member" "github_actions_run_admin" {
+  for_each = local.all_projects
+  project  = each.value.project_id
+  role     = "roles/run.admin"
+  member   = "serviceAccount:${google_service_account.github_actions.email}"
+}
+
 resource "github_actions_variable" "workload_identity_provider" {
   repository    = github_repository.repository.name
   variable_name = "WORKLOAD_IDENTITY_PROVIDER"
