@@ -27,9 +27,9 @@ variable "backend_port" {
 }
 
 variable "backend_cpu" {
-  description = "CPU allocation for the backend service (e.g., '0.5', '1', '2')"
+  description = "CPU allocation for the backend service (e.g., '1', '2', '4')"
   type        = string
-  default     = "0.25"
+  default     = "1"
 }
 
 variable "backend_memory" {
