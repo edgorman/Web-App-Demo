@@ -28,16 +28,15 @@ resource "google_cloud_run_v2_service" "backend" {
   }
 
   # Routes 100% of traffic to the latest revision.
-  # This ensures all requests go to the most recently deployed version.
   traffic {
     type    = "TRAFFIC_TARGET_ALLOCATION_TYPE_LATEST"
     percent = 100
   }
 }
 
-# Allow unauthenticated access to the backend service.
-# CORS and authentication/authorization are implemented at the application level.
 resource "google_cloud_run_v2_service_iam_member" "backend_public_access" {
+  depends_on = [google_cloud_run_v2_service.backend]
+
   name     = google_cloud_run_v2_service.backend.name
   location = google_cloud_run_v2_service.backend.location
   project  = google_cloud_run_v2_service.backend.project
