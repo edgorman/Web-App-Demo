@@ -8,6 +8,10 @@ inputs:
   region:
     description: 'GCP Region'
     required: true
+  service_name:
+    description: 'Cloud Run service name'
+    required: false
+    default: 'backend'
   workload_identity_provider:
     description: 'The Workload Identity Provider resource name'
     required: true
@@ -36,6 +40,7 @@ runs:
       shell: bash
       working-directory: services/backend
       run: |
+        # Build and tag image for the backend repository in Artifact Registry
         docker build -t ${{ inputs.region }}-docker.pkg.dev/${{ inputs.project_id }}/backend/backend:${{ github.sha }} \
                      -t ${{ inputs.region }}-docker.pkg.dev/${{ inputs.project_id }}/backend/backend:latest .
 
@@ -48,7 +53,7 @@ runs:
     - name: Deploy to Cloud Run
       shell: bash
       run: |
-        gcloud run deploy backend \
+        gcloud run deploy ${{ inputs.service_name }} \
           --image=${{ inputs.region }}-docker.pkg.dev/${{ inputs.project_id }}/backend/backend:${{ github.sha }} \
           --region=${{ inputs.region }} \
           --project=${{ inputs.project_id }} \
