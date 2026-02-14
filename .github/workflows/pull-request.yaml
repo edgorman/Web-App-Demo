@@ -8,6 +8,7 @@ on:
 
 permissions:
   contents: read
+  pull-requests: write
 
 jobs:
   diff:
@@ -16,6 +17,7 @@ jobs:
       infrastructure-root: ${{ steps.diff.outputs.infrastructure-root }}
       infrastructure-prod: ${{ steps.diff.outputs.infrastructure-prod }}
       infrastructure-dev: ${{ steps.diff.outputs.infrastructure-dev }}
+      service-backend: ${{ steps.diff.outputs.service-backend }}
     steps:
       - uses: actions/checkout@v5
       - id: diff
@@ -23,11 +25,12 @@ jobs:
 
   infrastructure-root:
     needs: diff
-    if: needs.diff.outputs.infrastructure-root == 'true'
+    if: needs.diff.outputs.infrastructure-root == 'true' && (github.base_ref == 'main' || github.base_ref == 'develop')
     runs-on: ubuntu-latest
     permissions:
       contents: read
       id-token: write
+      pull-requests: write
     steps:
       - uses: actions/checkout@v5
       - id: secrets
@@ -43,14 +46,16 @@ jobs:
           terraform_directory: 'infrastructure/root'
           config_directory: 'infrastructure/config/root'
           secrets: ${{ steps.secrets.outputs.secrets }}
+          github_token: ${{ secrets.GITHUB_TOKEN }}
 
   infrastructure-prod:
     needs: diff
-    if: needs.diff.outputs.infrastructure-prod == 'true'
+    if: needs.diff.outputs.infrastructure-prod == 'true' && github.base_ref == 'main'
     runs-on: ubuntu-latest
     permissions:
       contents: read
       id-token: write
+      pull-requests: write
     steps:
       - uses: actions/checkout@v5
       - id: secrets
@@ -65,14 +70,16 @@ jobs:
           terraform_directory: 'infrastructure/env'
           config_directory: 'infrastructure/config/prod'
           secrets: ${{ steps.secrets.outputs.secrets }}
+          github_token: ${{ secrets.GITHUB_TOKEN }}
 
   infrastructure-dev:
     needs: diff
-    if: needs.diff.outputs.infrastructure-dev == 'true'
+    if: needs.diff.outputs.infrastructure-dev == 'true' && github.base_ref == 'develop'
     runs-on: ubuntu-latest
     permissions:
       contents: read
       id-token: write
+      pull-requests: write
     steps:
       - uses: actions/checkout@v5
       - id: secrets
@@ -87,3 +94,14 @@ jobs:
           terraform_directory: 'infrastructure/env'
           config_directory: 'infrastructure/config/dev'
           secrets: ${{ steps.secrets.outputs.secrets }}
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+
+  backend:
+    needs: diff
+    if: needs.diff.outputs.service-backend == 'true'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v5
+      - uses: ./.github/actions/backend-pull-request

@@ -48,6 +48,7 @@ terraform apply
 - Creates the Dev and Prod projects.
 - Creates GCS buckets for remote state management.
 - Sets up Workload Identity Federation.
+- **Grants IAM Permissions**: Assigns Editor and Cloud Run Admin roles to the GitHub Actions service account on all environment projects.
 - **Wires GitHub Variables**: Automatically populates `WORKLOAD_IDENTITY_PROVIDER` and `SERVICE_ACCOUNT` into your GitHub repository settings.
 
 ## 6. Start Making PRs

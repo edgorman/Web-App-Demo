@@ -1,0 +1,40 @@
+name: 'Backend Pull Request'
+description: 'Lints, tests, and builds the backend service'
+
+runs:
+  using: "composite"
+  steps:
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.13'
+
+    - name: Install uv
+      shell: bash
+      run: |
+        curl -LsSf https://astral.sh/uv/install.sh | sh
+        echo "$HOME/.local/bin" >> $GITHUB_PATH
+
+    - name: Install dependencies
+      shell: bash
+      working-directory: services/backend
+      run: |
+        make install
+
+    - name: Lint
+      shell: bash
+      working-directory: services/backend
+      run: |
+        make lint
+
+    - name: Test
+      shell: bash
+      working-directory: services/backend
+      run: |
+        make test
+
+    - name: Build Docker image
+      shell: bash
+      working-directory: services/backend
+      run: |
+        make docker-build IMAGE_TAG=${{ github.sha }}
