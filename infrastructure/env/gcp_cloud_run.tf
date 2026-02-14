@@ -1,4 +1,6 @@
 resource "google_cloud_run_v2_service" "backend" {
+  depends_on = [google_project_service.env_services]
+
   name     = var.backend_service_name
   location = var.region
   project  = var.project_id
