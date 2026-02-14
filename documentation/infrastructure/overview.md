@@ -24,11 +24,13 @@ Services and APIs are managed via a consolidated `all_projects` local in Terrafo
 ## Application Infrastructure
 The `infrastructure/env/` directory contains environment-specific resources:
 - **Cloud Run Services**: Serverless container deployments for the backend and other services
-- **IAM Policies**: Access control for service invocation
+- **Service IAM Policies**: Access control for individual service invocation (e.g., making services publicly accessible)
 - **Configuration**: Environment-specific variables and scaling settings
+
+Note: Project-level IAM permissions for the GitHub Actions service account are managed centrally in the root project (`infrastructure/root/gcp_env_iam.tf`).
 
 See [Backend Service Deployment](../services/backend-deployment.md) for details on the backend Cloud Run service.
 
 ## Security Model
 - **Workload Identity Federation**: No long-lived GCP service account keys are used. GitHub Actions authenticates via OIDC.
-- **Least Privilege**: The GitHub Actions service account is created in the root project, and each environment grants it `Editor` and `Cloud Run Admin` roles as needed. The `Cloud Run Admin` role is required to manage IAM policies for Cloud Run services, such as enabling public access.
+- **Least Privilege**: The GitHub Actions service account is created in the root project, and the root project grants it `Editor` and `Cloud Run Admin` roles on all environment projects. The `Cloud Run Admin` role is required to manage IAM policies for Cloud Run services, such as enabling public access. This centralized permission management ensures that the service account has the necessary permissions before Terraform attempts to manage resources in environment projects.
