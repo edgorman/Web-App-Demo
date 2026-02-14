@@ -5,7 +5,7 @@ resource "google_service_account" "github_actions" {
 }
 
 resource "google_project_iam_member" "github_actions_sa_role" {
-  for_each = google_project.env_projects
+  for_each = local.all_projects
 
   project = each.value.project_id
   role    = "roles/admin"
