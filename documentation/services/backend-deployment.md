@@ -125,8 +125,8 @@ gcloud run services logs read backend --region=europe-west1 --follow
 - Cost-optimized for development and testing
 
 ### Production Environment
-- Maintains at least 1 warm instance
-- No cold starts for typical traffic patterns
+- Scales to zero when idle (no traffic)
+- First request after idle period may experience cold start (~2-5 seconds)
 - Automatically scales up to 10 instances under load
 - Scales down gradually when traffic decreases
 
@@ -137,7 +137,7 @@ Cloud Run pricing is based on:
 2. **Requests**: $0.40 per million requests
 3. **Minimum Instances**: Charged continuously when > 0
 
-Development environment with min_instances=0 only incurs costs during active use. Production with min_instances=1 has a base cost but eliminates cold starts.
+Development environment with min_instances=0 only incurs costs during active use. Production now also uses min_instances=0 to minimize costs and only incurs charges during active use.
 
 ## Troubleshooting
 
