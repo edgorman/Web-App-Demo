@@ -39,6 +39,8 @@ runs:
     - name: Build Docker image
       shell: bash
       working-directory: services/backend
+      env:
+        BUILDX_NO_DEFAULT_ATTESTATIONS: 1
       run: |
         # Build and tag image for the backend repository in Artifact Registry
         docker build -t ${{ inputs.region }}-docker.pkg.dev/${{ inputs.project_id }}/backend/backend:${{ github.sha }} \
