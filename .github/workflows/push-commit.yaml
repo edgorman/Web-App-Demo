@@ -50,7 +50,7 @@ jobs:
       always() &&
       needs.diff.result == 'success' &&
       needs.diff.outputs.infrastructure-prod == 'true' &&
-      (github.ref_name == 'main' || github.ref_name == 'develop') &&
+      github.ref_name == 'main' &&
       (needs.infrastructure-root.result == 'success' || needs.infrastructure-root.result == 'skipped')
     runs-on: ubuntu-latest
     permissions:
