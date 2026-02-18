@@ -12,6 +12,7 @@ variable "region" {
 variable "backend_image" {
   description = "The container image for the backend service"
   type        = string
+  default     = "us-docker.pkg.dev/cloudrun/container/hello"
 }
 
 variable "backend_service_name" {
