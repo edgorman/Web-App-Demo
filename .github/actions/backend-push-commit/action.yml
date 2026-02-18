@@ -47,8 +47,7 @@ runs:
     - name: Push Docker image
       shell: bash
       run: |
-        docker push ${{ inputs.region }}-docker.pkg.dev/${{ inputs.project_id }}/backend/backend:${{ github.sha }}
-        docker push ${{ inputs.region }}-docker.pkg.dev/${{ inputs.project_id }}/backend/backend:latest
+        docker push --all-tags ${{ inputs.region }}-docker.pkg.dev/${{ inputs.project_id }}/backend/backend
 
     - name: Deploy to Cloud Run
       shell: bash
