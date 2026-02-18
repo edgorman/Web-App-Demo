@@ -25,11 +25,19 @@ runs:
           infrastructure-root:
             - 'infrastructure/config/root/**'
             - 'infrastructure/root/**'
+            - '.github/actions/terraform-pull-request/**'
+            - '.github/actions/terraform-push-commit/**'
           infrastructure-prod:
             - 'infrastructure/config/prod/**'
             - 'infrastructure/env/**'
+            - '.github/actions/terraform-pull-request/**'
+            - '.github/actions/terraform-push-commit/**'
           infrastructure-dev:
             - 'infrastructure/config/dev/**'
             - 'infrastructure/env/**'
+            - '.github/actions/terraform-pull-request/**'
+            - '.github/actions/terraform-push-commit/**'
           service-backend:
             - 'services/backend/**'
+            - '.github/actions/backend-pull-request/**'
+            - '.github/actions/backend-push-commit/**'

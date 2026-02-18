@@ -32,6 +32,14 @@ resource "google_cloud_run_v2_service" "backend" {
     type    = "TRAFFIC_TARGET_ALLOCATION_TYPE_LATEST"
     percent = 100
   }
+
+  # Ignore changes to the image after the service is created
+  # as it will be updated via GitHub Actions
+  lifecycle {
+    ignore_changes = [
+      template[0].containers[0].image
+    ]
+  }
 }
 
 resource "google_cloud_run_v2_service_iam_member" "backend_public_access" {

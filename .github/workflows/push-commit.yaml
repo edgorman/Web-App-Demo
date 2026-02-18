@@ -16,6 +16,7 @@ jobs:
       infrastructure-root: ${{ steps.diff.outputs.infrastructure-root }}
       infrastructure-prod: ${{ steps.diff.outputs.infrastructure-prod }}
       infrastructure-dev: ${{ steps.diff.outputs.infrastructure-dev }}
+      service-backend: ${{ steps.diff.outputs.service-backend }}
     steps:
       - uses: actions/checkout@v5
       - id: diff
@@ -97,3 +98,45 @@ jobs:
           terraform_directory: 'infrastructure/env'
           config_directory: 'infrastructure/config/dev'
           secrets: ${{ steps.secrets.outputs.secrets }}
+
+  backend-prod:
+    needs: [diff, infrastructure-prod]
+    if: |
+      always() &&
+      needs.diff.result == 'success' &&
+      needs.diff.outputs.service-backend == 'true' &&
+      github.ref_name == 'main' &&
+      (needs.infrastructure-prod.result == 'success' || needs.infrastructure-prod.result == 'skipped')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@v5
+      - uses: ./.github/actions/backend-push-commit
+        with:
+          project_id: 'web-app-demo-prod'
+          region: 'europe-west1'
+          workload_identity_provider: ${{ vars.WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: ${{ vars.SERVICE_ACCOUNT }}
+
+  backend-dev:
+    needs: [diff, infrastructure-dev]
+    if: |
+      always() &&
+      needs.diff.result == 'success' &&
+      needs.diff.outputs.service-backend == 'true' &&
+      github.ref_name == 'develop' &&
+      (needs.infrastructure-dev.result == 'success' || needs.infrastructure-dev.result == 'skipped')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@v5
+      - uses: ./.github/actions/backend-push-commit
+        with:
+          project_id: 'web-app-demo-dev'
+          region: 'europe-west1'
+          workload_identity_provider: ${{ vars.WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: ${{ vars.SERVICE_ACCOUNT }}
