@@ -25,18 +25,12 @@ infrastructure/
 │       └── terraform.tfvars
 ├── env/
 │   ├── Makefile
-│   ├── gcp_artifact_registry.tf
-│   ├── gcp_cloud_run.tf
-│   ├── gcp_services.tf
-│   ├── outputs.tf
+│   ├── ...
 │   ├── providers.tf
 │   └── variables.tf
 └── root/
     ├── Makefile
-    ├── gcp_project.tf
-    ├── gcp_secret.tf
-    ├── github_cicd.tf
-    ├── github_repository.tf
+    ├── ...
     ├── providers.tf
     └── variables.tf
 ```
@@ -44,6 +38,7 @@ infrastructure/
 The infrastructure is organized into two main layers:
 
 ## Root Infrastructure (`infrastructure/root/`)
+
 Acts as the administrative hub for the entire stack:
 - **State Management**: Hosts GCS buckets for Terraform states
 - **Identity & Security**: Contains Workload Identity Federation resources and GitHub Actions Service Account
@@ -51,6 +46,7 @@ Acts as the administrative hub for the entire stack:
 - **GitHub Configuration**: Manages GitHub repository settings, variables, and CI/CD integration
 
 ## Environment Infrastructure (`infrastructure/env/`)
+
 Environment-specific resources (dev/prod):
 - **Cloud Run Services**: Serverless container deployments
 - **Artifact Registry**: Container image repositories
@@ -58,6 +54,7 @@ Environment-specific resources (dev/prod):
 - **Configuration**: Environment-specific variables and scaling settings
 
 ## Configuration Files (`infrastructure/config/`)
+
 Environment-specific Terraform variables:
 - `dev/` - Development environment configuration
 - `prod/` - Production environment configuration
