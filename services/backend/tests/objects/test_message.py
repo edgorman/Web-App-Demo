@@ -1,5 +1,6 @@
 """Test message object."""
 import pytest
+from pydantic import ValidationError
 from src.objects.message import Message
 
 
@@ -11,5 +12,5 @@ def test_message_creation():
 
 def test_message_validation():
     """Test message validation."""
-    with pytest.raises(Exception):
+    with pytest.raises(ValidationError):
         Message()  # Should fail without message field

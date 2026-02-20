@@ -12,7 +12,7 @@ class API(ABC):
         Returns:
             Application instance
         """
-        pass
+        ...
 
     @abstractmethod
     def run(self, host: str, port: int, reload: bool = False):
@@ -23,4 +23,4 @@ class API(ABC):
             port: Port to bind to
             reload: Enable auto-reload
         """
-        pass
+        ...
