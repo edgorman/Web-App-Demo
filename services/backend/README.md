@@ -17,7 +17,6 @@ services/backend/
 │   │       └── resources/v1/  # API endpoints grouped by version
 │   └── storage/          # Storage layer (for future DB integration)
 ├── tests/                # Tests mirroring src/ structure
-├── main.py               # Application entry point
 └── .env.example          # Environment variable template
 ```
 
@@ -58,19 +57,13 @@ Start the development server:
 make run
 ```
 
-Or using uv directly:
-
-```bash
-uv run uvicorn main:app --reload
-```
-
 Or using the CLI:
 
 ```bash
 uv run python -m src.cli.cli run --reload
 ```
 
-The service will be available at `http://127.0.0.1:8000`
+The service will be available at `http://127.0.0.1:8080`
 
 ### Docker
 
@@ -126,8 +119,8 @@ cp .env.example .env
 ```
 
 Available configuration options:
-- `SERVICE__HOST`: Server host (default: 0.0.0.0)
-- `SERVICE__PORT`: Server port (default: 8080)
-- `SERVICE__RELOAD`: Enable auto-reload (default: false)
-- `SERVICE__APP_NAME`: Application name
-- `SERVICE__APP_VERSION`: Application version
+- `SERVICE__FASTAPI__HOST`: Server host (default: 0.0.0.0)
+- `SERVICE__FASTAPI__PORT`: Server port (default: 8080)
+- `SERVICE__FASTAPI__RELOAD`: Enable auto-reload (default: false)
+- `SERVICE__FASTAPI__APP_NAME`: Application name
+- `SERVICE__FASTAPI__APP_VERSION`: Application version

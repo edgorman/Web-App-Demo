@@ -9,9 +9,9 @@ def test_fastapi_service_initialization(service_config):
     assert service.app is not None
 
 
-def test_fastapi_service_get_app(fastapi_service):
-    """Test getting the FastAPI app."""
-    app = fastapi_service.get_app()
+def test_fastapi_service_app_properties(fastapi_service):
+    """Test FastAPI app properties."""
+    app = fastapi_service.app
     assert app is not None
     assert app.title == "Web-App-Demo Backend"
     assert app.version == "0.1.0"

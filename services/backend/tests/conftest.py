@@ -20,4 +20,4 @@ def fastapi_service(service_config):
 @pytest.fixture
 def test_client(fastapi_service):
     """Create a test client for the FastAPI service."""
-    return TestClient(fastapi_service.get_app())
+    return TestClient(fastapi_service.app)

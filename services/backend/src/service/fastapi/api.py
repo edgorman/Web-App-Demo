@@ -1,12 +1,12 @@
 """FastAPI implementation of the API interface."""
 import uvicorn
 from fastapi import FastAPI
-from src.service.api import API
+from src.service.api import APIInterface
 from src.service.fastapi.resources.v1 import hello
 from src.config.service import ServiceConfig
 
 
-class FastAPIService(API):
+class FastAPIService(APIInterface):
     """FastAPI implementation of the API interface."""
 
     def __init__(self, config: ServiceConfig):
@@ -23,14 +23,6 @@ class FastAPIService(API):
 
         # Include routers
         self.app.include_router(hello.router, tags=["hello"])
-
-    def get_app(self):
-        """Get the FastAPI application instance.
-
-        Returns:
-            FastAPI: The FastAPI application
-        """
-        return self.app
 
     def run(self, host: str = None, port: int = None, reload: bool = None):
         """Run the FastAPI server.

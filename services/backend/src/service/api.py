@@ -2,17 +2,8 @@
 from abc import ABC, abstractmethod
 
 
-class API(ABC):
+class APIInterface(ABC):
     """Abstract base class for API implementations."""
-
-    @abstractmethod
-    def get_app(self):
-        """Get the application instance.
-
-        Returns:
-            Application instance
-        """
-        ...
 
     @abstractmethod
     def run(self, host: str, port: int, reload: bool = False):
