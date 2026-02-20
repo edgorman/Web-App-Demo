@@ -62,4 +62,4 @@ As shown, the code should be separated and implement dependency injection. `foob
 - object files should use pydantic models
 - service/api.py should be an interface that service/fastapi/api.py should implement
 - storage files should be used for managing the reading and writing of object classes. In the example storage/foobar.py is an interface and storage/psql/foobar.py is the implementation.
-- tests should mimic the folder structure under src. Use conftest.py for any shared pytext fixtures
+- tests should mimic the folder structure under src. Use conftest.py for any shared pytest fixtures
