@@ -20,4 +20,4 @@ docker-build: ## build docker image (use IMAGE_TAG variable for tag)
 
 .PHONY: run
 run: ## run the backend service
-	uv run python -m src.cli.cli run --reload
+	uv run python -m src.cli.cli run

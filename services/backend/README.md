@@ -60,7 +60,7 @@ make run
 Or using the CLI:
 
 ```bash
-uv run python -m src.cli.cli run --reload
+uv run python -m src.cli.cli run
 ```
 
 The service will be available at `http://127.0.0.1:8080`
@@ -117,10 +117,3 @@ Configuration is managed through environment variables. Copy `.env.example` to `
 ```bash
 cp .env.example .env
 ```
-
-Available configuration options:
-- `SERVICE__FASTAPI__HOST`: Server host (default: 0.0.0.0)
-- `SERVICE__FASTAPI__PORT`: Server port (default: 8080)
-- `SERVICE__FASTAPI__RELOAD`: Enable auto-reload (default: false)
-- `SERVICE__FASTAPI__APP_NAME`: Application name
-- `SERVICE__FASTAPI__APP_VERSION`: Application version

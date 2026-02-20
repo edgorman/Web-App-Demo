@@ -1,4 +1,4 @@
-"""Generic API response model."""
+"""Request and Response models for FastAPI resources."""
 from typing import Generic, TypeVar, Optional
 from datetime import datetime, timezone
 from pydantic import BaseModel, Field
@@ -6,7 +6,16 @@ from pydantic import BaseModel, Field
 DataT = TypeVar('DataT')
 
 
-class APIResponse(BaseModel, Generic[DataT]):
+class Request(BaseModel, Generic[DataT]):
+    """Generic API request wrapper.
+
+    This model wraps all API requests with consistent structure.
+    """
+
+    data: DataT = Field(..., description="The request data")
+
+
+class Response(BaseModel, Generic[DataT]):
     """Generic API response wrapper.
 
     This model wraps all API responses with consistent metadata.

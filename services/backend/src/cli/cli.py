@@ -11,14 +11,11 @@ def cli():
 
 
 @cli.command()
-@click.option("--host", default=None, help="Host to bind to")
-@click.option("--port", default=None, type=int, help="Port to bind to")
-@click.option("--reload", is_flag=True, default=None, help="Enable auto-reload")
-def run(host, port, reload):
+def run():
     """Run the backend service."""
     config = ServiceConfig()
     service = FastAPIService(config)
-    service.run(host=host, port=port, reload=reload)
+    service.run()
 
 
 if __name__ == "__main__":
