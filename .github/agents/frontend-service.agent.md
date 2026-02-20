@@ -58,11 +58,13 @@ services/
 As shown, the code should be well-organized and follow modern frontend development practices. In more detail:
 
 ## Component Organization
+
 - **components/common/**: Reusable UI components (buttons, inputs, cards, etc.)
 - **components/layout/**: Layout components (headers, footers, sidebars, etc.)
 - **components/pages/**: Page-level components that compose smaller components
 
 ## Code Structure
+
 - **hooks/**: Custom React hooks for reusable logic
 - **services/**: API clients and external service integrations
 - **types/**: TypeScript type definitions and interfaces
@@ -70,12 +72,14 @@ As shown, the code should be well-organized and follow modern frontend developme
 - **config/**: Application configuration (API endpoints, feature flags, etc.)
 
 ## Configuration
+
 - Use environment variables for configuration (`.env.example` as template)
 - Use TypeScript for type safety across the application
 - Follow React best practices (functional components, hooks, etc.)
 - Implement proper error boundaries and error handling
 
 ## Testing
+
 - Write unit tests for components using React Testing Library
 - Write integration tests for complex user flows
 - Test hooks in isolation
@@ -83,12 +87,14 @@ As shown, the code should be well-organized and follow modern frontend developme
 - Follow the test file structure that mirrors the src directory
 
 ## Build and Deployment
+
 - Use Vite (or similar modern bundler) for fast development and optimized builds
 - Containerize the application using Dockerfile for consistent deployments
 - Serve the built static files using a lightweight web server (e.g., nginx)
 - Configure proper caching headers for static assets
 
 ## Best Practices
+
 - Use TypeScript for type safety
 - Follow accessibility (a11y) guidelines
 - Implement responsive design for mobile and desktop
