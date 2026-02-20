@@ -1,8 +1,12 @@
-from fastapi import FastAPI
+"""Main entry point for the backend service."""
+from src.config.service import ServiceConfig
+from src.service.fastapi.api import FastAPIService
 
-app = FastAPI()
+# Create service configuration
+config = ServiceConfig()
 
+# Create FastAPI service
+service = FastAPIService(config)
 
-@app.get("/")
-def read_root():
-    return {"message": "Hello from the Web-App-Demo backend!"}
+# Expose the app for uvicorn
+app = service.get_app()

@@ -29,6 +29,7 @@ COPY --from=builder /app/.venv /app/.venv
 
 # Copy application code
 COPY main.py ./
+COPY src ./src
 
 # Set environment variables
 ENV PATH="/app/.venv/bin:$PATH"

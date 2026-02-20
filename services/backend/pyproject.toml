@@ -12,6 +12,7 @@ dependencies = [
     "uvicorn",
     "click",
     "pydantic",
+    "pydantic-settings",
 ]
 
 [project.optional-dependencies]
