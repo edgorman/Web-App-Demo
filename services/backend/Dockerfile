@@ -28,7 +28,7 @@ ENV PYTHON_VERSION=${PYTHON_VERSION}
 COPY --from=builder /app/.venv /app/.venv
 
 # Copy application code
-COPY main.py ./
+COPY src ./src
 
 # Set environment variables
 ENV PATH="/app/.venv/bin:$PATH"
@@ -38,4 +38,4 @@ ENV PYTHONUNBUFFERED=1
 EXPOSE 8080
 
 # Run the application
-CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8080"]
+CMD ["python", "-m", "src.cli.cli", "run"]
