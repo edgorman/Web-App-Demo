@@ -1,6 +1,31 @@
 # Backend Service
 
-A basic FastAPI backend service for Web-App-Demo.
+A FastAPI backend service for Web-App-Demo with a clean architecture following dependency injection principles.
+
+## Architecture
+
+The backend follows a structured architecture with clear separation of concerns:
+
+```
+services/backend/
+├── src/
+│   ├── cli/              # Command-line interface
+│   ├── config/           # Configuration using pydantic settings
+│   ├── objects/          # Pydantic models for data objects
+│   ├── service/          # Service layer with API interface
+│   │   └── fastapi/      # FastAPI implementation
+│   │       └── resources/v1/  # API endpoints grouped by version
+│   └── storage/          # Storage layer (for future DB integration)
+├── tests/                # Tests mirroring src/ structure
+└── .env.example          # Environment variable template
+```
+
+### Key Design Principles
+
+- **Dependency Injection**: Components are loosely coupled through interfaces
+- **Configuration**: Uses pydantic-settings with `.env` file support
+- **Type Safety**: Pydantic models for all data objects
+- **Testability**: Shared fixtures in conftest.py, tests mirror source structure
 
 ## Prerequisites
 
@@ -32,13 +57,13 @@ Start the development server:
 make run
 ```
 
-Or using uv directly:
+Or using the CLI:
 
 ```bash
-uv run uvicorn main:app --reload
+uv run python -m src.cli.cli run
 ```
 
-The service will be available at `http://127.0.0.1:8000`
+The service will be available at `http://127.0.0.1:8080`
 
 ### Docker
 
@@ -84,3 +109,11 @@ make test
 ## API Endpoints
 
 - `GET /` - Returns a welcome message
+
+## Configuration
+
+Configuration is managed through environment variables. Copy `.env.example` to `.env` and customize as needed:
+
+```bash
+cp .env.example .env
+```
