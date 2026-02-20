@@ -1,12 +1,12 @@
 """FastAPI implementation of the API interface."""
 import uvicorn
 from fastapi import FastAPI
-from src.service.api import APIInterface
+from src.service.api import APIServiceInterface
 from src.service.fastapi.resources.v1 import hello
 from src.config.service import ServiceConfig
 
 
-class FastAPIService(APIInterface):
+class FastAPIService(APIServiceInterface):
     """FastAPI implementation of the API interface."""
 
     def __init__(self, config: ServiceConfig):
@@ -17,8 +17,8 @@ class FastAPIService(APIInterface):
         """
         self.config = config
         self.app = FastAPI(
-            title=config.app_name,
-            version=config.app_version,
+            title=config.fastapi.app_name,
+            version=config.fastapi.app_version,
         )
 
         # Include routers
@@ -34,7 +34,7 @@ class FastAPIService(APIInterface):
         """
         uvicorn.run(
             self.app,
-            host=host or self.config.host,
-            port=port or self.config.port,
-            reload=reload if reload is not None else self.config.reload,
+            host=host or self.config.fastapi.host,
+            port=port or self.config.fastapi.port,
+            reload=reload if reload is not None else self.config.fastapi.reload,
         )

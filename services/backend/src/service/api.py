@@ -2,7 +2,7 @@
 from abc import ABC, abstractmethod
 
 
-class APIInterface(ABC):
+class APIServiceInterface(ABC):
     """Abstract base class for API implementations."""
 
     @abstractmethod
