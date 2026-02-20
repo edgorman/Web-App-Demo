@@ -3,7 +3,7 @@ from pydantic import BaseModel
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
-class FastAPIConfig(BaseModel):
+class FastAPIServiceConfig(BaseModel):
     """FastAPI-specific configuration."""
 
     host: str = "0.0.0.0"
@@ -24,4 +24,4 @@ class ServiceConfig(BaseSettings):
         env_nested_delimiter="__",
     )
 
-    fastapi: FastAPIConfig = FastAPIConfig()
+    fastapi: FastAPIServiceConfig = FastAPIServiceConfig()
