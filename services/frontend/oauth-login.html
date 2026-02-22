@@ -101,16 +101,25 @@
     </div>
 
     <script>
-        // Configuration - These should be set via environment variables
+        // Configuration - IMPORTANT: Replace these placeholder values before deploying!
+        // These values should be injected at build time or loaded from a secure configuration endpoint
+        // DO NOT commit real credentials to source control
         const CONFIG = {
             // GCP Project ID for Identity Platform
+            // Get from: https://console.cloud.google.com/home/dashboard
             projectId: 'YOUR_PROJECT_ID',
-            // Web API Key from GCP Identity Platform
+            
+            // Web API Key from GCP Identity Platform (this is safe to expose publicly)
+            // Get from: https://console.cloud.google.com/customer-identity/providers
             apiKey: 'YOUR_API_KEY',
-            // OAuth Client ID from GCP Console
+            
+            // OAuth Client ID from GCP Console (safe to expose publicly)
+            // Get from: https://console.cloud.google.com/apis/credentials
             clientId: 'YOUR_CLIENT_ID.apps.googleusercontent.com',
+            
             // Redirect URI - should match your Cloud Run service URL
             redirectUri: window.location.origin + window.location.pathname,
+            
             // Google OAuth endpoints
             authEndpoint: 'https://accounts.google.com/o/oauth2/v2/auth',
             tokenEndpoint: 'https://oauth2.googleapis.com/token',
@@ -203,6 +212,13 @@
             const state = generateState();
             sessionStorage.setItem('oauth_state', state);
             
+            // Note: Using OAuth2 Implicit Flow (response_type=id_token)
+            // While the Authorization Code Flow with PKCE is more secure,
+            // the implicit flow is simpler for pure client-side apps with no backend.
+            // Trade-offs:
+            //   - Implicit: Token in URL fragment (client-side only, never sent to server)
+            //   - PKCE: Requires backend to exchange code for token
+            // For "dirt cheap" architecture with NO backend, implicit flow is appropriate.
             const params = new URLSearchParams({
                 client_id: CONFIG.clientId,
                 redirect_uri: CONFIG.redirectUri,
@@ -248,6 +264,13 @@
                 sessionStorage.removeItem('oauth_state');
                 
                 // Save token to localStorage
+                // Security Note: localStorage is vulnerable to XSS attacks
+                // Trade-offs for this "no database" architecture:
+                //   - localStorage: Persists across browser sessions, simple client-side storage
+                //   - sessionStorage: More secure but doesn't persist across tabs/sessions
+                //   - httpOnly cookies: Most secure but requires backend server
+                // For "dirt cheap" pure client-side app, localStorage is the appropriate choice.
+                // Mitigation: Use Content-Security-Policy headers to prevent XSS
                 localStorage.setItem('id_token', idToken);
                 
                 // Clean URL

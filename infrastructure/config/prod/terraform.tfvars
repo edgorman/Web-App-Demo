@@ -16,6 +16,8 @@ frontend_min_instances = 0 # Allow scaling to zero to minimize costs
 frontend_max_instances = 10
 
 # Google Identity Platform / OAuth Configuration
+# SECURITY: Do NOT commit actual secrets to version control!
+# Replace these placeholder values with your actual OAuth credentials
 # Get these from: https://console.cloud.google.com/apis/credentials
 google_oauth_client_id     = "YOUR_CLIENT_ID.apps.googleusercontent.com"
 google_oauth_client_secret = "YOUR_CLIENT_SECRET"
