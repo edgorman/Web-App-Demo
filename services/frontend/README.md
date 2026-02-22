@@ -1,66 +1,40 @@
 # Frontend Service
 
-A modern React-based frontend service built with TypeScript and Vite.
+A React-based frontend service built with TypeScript and Vite.
 
-## Features
+## Prerequisites
 
-- ⚡️ **Vite** - Fast build tool and dev server
-- ⚛️ **React 18** - Latest React with concurrent features
-- 🔷 **TypeScript** - Type safety and better developer experience
-- 🎨 **CSS** - Modern CSS with dark/light mode support
-- 🐳 **Docker** - Containerized deployment with nginx
-- 📦 **Code Quality** - ESLint and Prettier configured
+- Node.js 18+ and npm
 
 ## Getting Started
 
-### Prerequisites
-
-- Node.js 18+ and npm
-- Docker (optional, for containerized deployment)
-
-### Installation
-
 ```bash
 # Install dependencies
-npm install
+make install
+
+# Start development server
+make dev
 ```
 
-### Development
+## Available Commands
 
-```bash
-# Start development server (runs on http://localhost:3000)
-npm run dev
-```
+Using Make:
+- `make install` - Install dependencies
+- `make dev` - Start development server on http://localhost:3000
+- `make build` - Build for production
+- `make preview` - Preview production build
+- `make lint` - Run ESLint
+- `make format` - Format code with Prettier
+- `make clean` - Clean build artifacts and dependencies
+- `make help` - Show all available commands
 
-### Build
-
-```bash
-# Build for production
-npm run build
-
-# Preview production build
-npm run preview
-```
-
-### Code Quality
-
-```bash
-# Run linter
-npm run lint
-
-# Format code
-npm run format
-```
-
-### Docker
-
-```bash
-# Build Docker image
-docker build -t frontend-service .
-
-# Run container
-docker run -p 80:80 frontend-service
-```
+Or using npm directly:
+- `npm install` - Install dependencies
+- `npm run dev` - Start development server
+- `npm run build` - Build for production
+- `npm run preview` - Preview production build
+- `npm run lint` - Run ESLint
+- `npm run format` - Format code with Prettier
 
 ## Project Structure
 
@@ -68,11 +42,11 @@ docker run -p 80:80 frontend-service
 src/
 ├── components/
 │   └── pages/
-│       └── Home.tsx       # Home page component
-├── App.tsx                # Main app component
-├── main.tsx              # Application entry point
-├── App.css               # App-specific styles
-└── index.css             # Global styles
+│       └── Home.tsx
+├── App.tsx
+├── main.tsx
+├── App.css
+└── index.css
 ```
 
 ## Configuration
@@ -80,15 +54,3 @@ src/
 Environment variables can be configured in `.env` file (see `.env.example`):
 
 - `VITE_API_URL` - Backend API URL
-
-## Deployment
-
-The application is containerized using Docker with a multi-stage build:
-1. Build stage: Compiles TypeScript and bundles assets
-2. Production stage: Serves static files with nginx
-
-The nginx server includes:
-- Static asset caching
-- Gzip compression
-- Security headers
-- SPA routing support
