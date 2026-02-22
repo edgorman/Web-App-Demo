@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Google OAuth Login - No SDK</title>
+    <script src="/env.js"></script>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -101,21 +102,16 @@
     </div>
 
     <script>
-        // Configuration - IMPORTANT: Replace these placeholder values before deploying!
-        // These values should be injected at build time or loaded from a secure configuration endpoint
-        // DO NOT commit real credentials to source control
+        // Configuration - Values injected at build time via environment variables
         const CONFIG = {
             // GCP Project ID for Identity Platform
-            // Get from: https://console.cloud.google.com/home/dashboard
-            projectId: 'YOUR_PROJECT_ID',
+            projectId: window.ENV_PROJECT_ID || 'YOUR_PROJECT_ID',
             
             // Web API Key from GCP Identity Platform (this is safe to expose publicly)
-            // Get from: https://console.cloud.google.com/customer-identity/providers
-            apiKey: 'YOUR_API_KEY',
+            apiKey: window.ENV_API_KEY || 'YOUR_API_KEY',
             
             // OAuth Client ID from GCP Console (safe to expose publicly)
-            // Get from: https://console.cloud.google.com/apis/credentials
-            clientId: 'YOUR_CLIENT_ID.apps.googleusercontent.com',
+            clientId: window.ENV_CLIENT_ID || 'YOUR_CLIENT_ID.apps.googleusercontent.com',
             
             // Redirect URI - should match your Cloud Run service URL
             redirectUri: window.location.origin + window.location.pathname,

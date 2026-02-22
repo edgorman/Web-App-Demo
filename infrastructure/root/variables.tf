@@ -34,18 +34,6 @@ variable "github_provider_token" {
   sensitive   = true
 }
 
-variable "google_oauth_client_id" {
-  description = "Google OAuth 2.0 Client ID for Identity Platform"
-  type        = string
-  sensitive   = true
-}
-
-variable "google_oauth_client_secret" {
-  description = "Google OAuth 2.0 Client Secret for Identity Platform"
-  type        = string
-  sensitive   = true
-}
-
 variable "github_repository_owner" {
   description = "The owner of the GitHub repository"
   type        = string

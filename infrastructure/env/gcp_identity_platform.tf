@@ -7,15 +7,12 @@ resource "google_identity_platform_config" "default" {
     allow_duplicate_emails = false
   }
 
-  # Authorized domains will be updated via gcloud in GitHub Actions after Cloud Run deployment
-  # Initial list includes localhost for local development
-  authorized_domains = ["localhost"]
-
-  lifecycle {
-    ignore_changes = [
-      authorized_domains
-    ]
-  }
+  # Authorized domains include localhost and backend/frontend Cloud Run URLs
+  authorized_domains = concat(
+    ["localhost"],
+    [replace(google_cloud_run_v2_service.backend.uri, "https://", "")],
+    [replace(google_cloud_run_v2_service.frontend.uri, "https://", "")]
+  )
 }
 
 resource "google_identity_platform_default_supported_idp_config" "providers" {

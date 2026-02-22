@@ -14,11 +14,3 @@ frontend_cpu           = "1"
 frontend_memory        = "512Mi"
 frontend_min_instances = 0 # Allow scaling to zero to minimize costs
 frontend_max_instances = 5
-
-# Google Identity Platform Configuration
-# OAuth providers (client ID and secret injected from Secret Manager via GitHub Actions)
-identity_platform_providers = {
-  "google.com" = {
-    enabled = true
-  }
-}
