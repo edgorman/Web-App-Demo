@@ -113,6 +113,9 @@
             // OAuth Client ID from GCP Console (safe to expose publicly)
             clientId: window.ENV_CLIENT_ID || 'YOUR_CLIENT_ID.apps.googleusercontent.com',
             
+            // Backend API URL (Cloud Run service)
+            backendUrl: window.ENV_BACKEND_URL || window.location.origin.replace('frontend', 'backend'),
+            
             // Redirect URI - should match your Cloud Run service URL
             redirectUri: window.location.origin + window.location.pathname,
             
@@ -210,11 +213,12 @@
             
             // Note: Using OAuth2 Implicit Flow (response_type=id_token)
             // While the Authorization Code Flow with PKCE is more secure,
-            // the implicit flow is simpler for client-side apps without server-side token exchange.
+            // the implicit flow is simpler for client-side apps.
+            // The JWT token will be validated by the backend API on each request.
             // Trade-offs:
-            //   - Implicit: Token in URL fragment (client-side only, never sent to server)
-            //   - PKCE: Requires backend server to exchange code for token
-            // For cost-optimized architecture with stateless backend services, implicit flow is appropriate.
+            //   - Implicit: Token in URL fragment (client-side only, never sent to server automatically)
+            //   - PKCE: Requires server-side code exchange (more complex but more secure)
+            // The backend Cloud Run service validates tokens on API requests.
             const params = new URLSearchParams({
                 client_id: CONFIG.clientId,
                 redirect_uri: CONFIG.redirectUri,
@@ -261,11 +265,13 @@
                 
                 // Save token to localStorage
                 // Security Note: localStorage is vulnerable to XSS attacks
-                // Trade-offs for this stateless authentication architecture:
+                // The token is sent to the backend API for validation on each request.
+                // Trade-offs:
                 //   - localStorage: Persists across browser sessions, simple client-side storage
                 //   - sessionStorage: More secure but doesn't persist across tabs/sessions
-                //   - httpOnly cookies: Most secure but requires server-side session management
-                // For cost-optimized architecture with stateless Cloud Run services, localStorage is appropriate.
+                //   - httpOnly cookies: Most secure, requires backend to set cookies
+                // Since we have stateless Cloud Run backend services, localStorage provides
+                // persistence while backend validates tokens on each API call.
                 // Mitigation: Use Content-Security-Policy headers to prevent XSS
                 localStorage.setItem('id_token', idToken);
                 
@@ -284,6 +290,33 @@
         function logout() {
             localStorage.removeItem('id_token');
             showLogin();
+        }
+
+        // Helper function to make authenticated API calls to backend
+        async function callBackendAPI(endpoint, options = {}) {
+            const token = localStorage.getItem('id_token');
+            if (!token) {
+                throw new Error('No authentication token available');
+            }
+
+            const headers = {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json',
+                ...options.headers
+            };
+
+            const response = await fetch(`${CONFIG.backendUrl}${endpoint}`, {
+                ...options,
+                headers
+            });
+
+            if (response.status === 401) {
+                // Token expired or invalid, logout user
+                logout();
+                throw new Error('Authentication failed');
+            }
+
+            return response;
         }
 
         // Initialize the app

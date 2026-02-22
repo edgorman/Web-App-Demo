@@ -91,6 +91,7 @@ runs:
         window.ENV_PROJECT_ID = '${{ inputs.project_id }}';
         window.ENV_API_KEY = '${{ steps.get-api-key.outputs.api_key }}';
         window.ENV_CLIENT_ID = '${{ inputs.google_oauth_client_id }}';
+        window.ENV_BACKEND_URL = '${{ steps.get-backend-url.outputs.backend_url }}';
         EOF
         
         # Create Dockerfile with env.js injection
