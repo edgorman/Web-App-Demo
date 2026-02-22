@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Google OAuth Login - No SDK</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            margin-bottom: 20px;
+        }
+        .login-btn {
+            background-color: #4285f4;
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            text-decoration: none;
+            display: inline-block;
+        }
+        .login-btn:hover {
+            background-color: #357ae8;
+        }
+        .logout-btn {
+            background-color: #db4437;
+            color: white;
+            padding: 8px 16px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            margin-left: 10px;
+        }
+        .logout-btn:hover {
+            background-color: #c23321;
+        }
+        .user-info {
+            margin-top: 20px;
+            padding: 15px;
+            background-color: #e8f5e9;
+            border-radius: 4px;
+        }
+        .error {
+            margin-top: 20px;
+            padding: 15px;
+            background-color: #ffebee;
+            border-radius: 4px;
+            color: #c62828;
+        }
+        .code {
+            background-color: #f5f5f5;
+            padding: 10px;
+            border-radius: 4px;
+            font-family: monospace;
+            font-size: 12px;
+            word-break: break-all;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Google OAuth Login (Pure OAuth2/OIDC)</h1>
+        <div id="loginSection" style="display: none;">
+            <p>You are not logged in. Click the button below to sign in with Google.</p>
+            <a href="#" id="loginButton" class="login-btn">Sign in with Google</a>
+        </div>
+        <div id="userSection" style="display: none;">
+            <h2>Welcome!</h2>
+            <div class="user-info">
+                <p><strong>Email:</strong> <span id="userEmail"></span></p>
+                <p><strong>Name:</strong> <span id="userName"></span></p>
+                <p><strong>Token Expiry:</strong> <span id="tokenExpiry"></span></p>
+            </div>
+            <button class="logout-btn" onclick="logout()">Sign Out</button>
+            <details style="margin-top: 20px;">
+                <summary>Show JWT Token</summary>
+                <div class="code" id="tokenDisplay"></div>
+            </details>
+        </div>
+        <div id="errorSection" style="display: none;">
+            <div class="error">
+                <strong>Error:</strong> <span id="errorMessage"></span>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Configuration - These should be set via environment variables
+        const CONFIG = {
+            // GCP Project ID for Identity Platform
+            projectId: 'YOUR_PROJECT_ID',
+            // Web API Key from GCP Identity Platform
+            apiKey: 'YOUR_API_KEY',
+            // OAuth Client ID from GCP Console
+            clientId: 'YOUR_CLIENT_ID.apps.googleusercontent.com',
+            // Redirect URI - should match your Cloud Run service URL
+            redirectUri: window.location.origin + window.location.pathname,
+            // Google OAuth endpoints
+            authEndpoint: 'https://accounts.google.com/o/oauth2/v2/auth',
+            tokenEndpoint: 'https://oauth2.googleapis.com/token',
+        };
+
+        // JWT decode function (no external libraries)
+        function decodeJWT(token) {
+            try {
+                const parts = token.split('.');
+                if (parts.length !== 3) {
+                    throw new Error('Invalid JWT format');
+                }
+                
+                // Decode the payload (second part)
+                const payload = parts[1];
+                // Replace URL-safe chars and pad if necessary
+                const base64 = payload.replace(/-/g, '+').replace(/_/g, '/');
+                const padded = base64.padEnd(base64.length + (4 - base64.length % 4) % 4, '=');
+                
+                const jsonPayload = decodeURIComponent(
+                    atob(padded)
+                        .split('')
+                        .map(c => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
+                        .join('')
+                );
+                
+                return JSON.parse(jsonPayload);
+            } catch (error) {
+                console.error('Error decoding JWT:', error);
+                return null;
+            }
+        }
+
+        // Check if token is expired
+        function isTokenExpired(token) {
+            const decoded = decodeJWT(token);
+            if (!decoded || !decoded.exp) {
+                return true;
+            }
+            // exp is in seconds, Date.now() is in milliseconds
+            return decoded.exp * 1000 < Date.now();
+        }
+
+        // Display user info from JWT
+        function displayUserInfo(token) {
+            const decoded = decodeJWT(token);
+            if (!decoded) {
+                showError('Failed to decode JWT token');
+                return;
+            }
+
+            document.getElementById('userEmail').textContent = decoded.email || 'N/A';
+            document.getElementById('userName').textContent = decoded.name || 'N/A';
+            
+            if (decoded.exp) {
+                const expiryDate = new Date(decoded.exp * 1000);
+                document.getElementById('tokenExpiry').textContent = expiryDate.toLocaleString();
+            }
+            
+            document.getElementById('tokenDisplay').textContent = token;
+            
+            // Show user section, hide login section
+            document.getElementById('loginSection').style.display = 'none';
+            document.getElementById('userSection').style.display = 'block';
+            document.getElementById('errorSection').style.display = 'none';
+        }
+
+        // Show login button
+        function showLogin() {
+            document.getElementById('loginSection').style.display = 'block';
+            document.getElementById('userSection').style.display = 'none';
+            document.getElementById('errorSection').style.display = 'none';
+        }
+
+        // Show error message
+        function showError(message) {
+            document.getElementById('errorMessage').textContent = message;
+            document.getElementById('errorSection').style.display = 'block';
+        }
+
+        // Generate random state for OAuth security
+        function generateState() {
+            const array = new Uint8Array(16);
+            crypto.getRandomValues(array);
+            return Array.from(array, byte => byte.toString(16).padStart(2, '0')).join('');
+        }
+
+        // Build OAuth authorization URL
+        function buildAuthUrl() {
+            const state = generateState();
+            sessionStorage.setItem('oauth_state', state);
+            
+            const params = new URLSearchParams({
+                client_id: CONFIG.clientId,
+                redirect_uri: CONFIG.redirectUri,
+                response_type: 'id_token token', // Use implicit flow for id_token
+                scope: 'openid email profile',
+                state: state,
+                nonce: generateState(), // Add nonce for security
+            });
+            
+            return `${CONFIG.authEndpoint}?${params.toString()}`;
+        }
+
+        // Handle OAuth callback
+        function handleCallback() {
+            // Check for OAuth response in URL fragment
+            const hash = window.location.hash.substring(1);
+            if (!hash) {
+                return false;
+            }
+            
+            const params = new URLSearchParams(hash);
+            const idToken = params.get('id_token');
+            const state = params.get('state');
+            const error = params.get('error');
+            
+            if (error) {
+                showError(`OAuth error: ${error}`);
+                // Clean URL
+                history.replaceState(null, '', window.location.pathname);
+                return true;
+            }
+            
+            if (idToken) {
+                // Verify state to prevent CSRF
+                const savedState = sessionStorage.getItem('oauth_state');
+                if (state !== savedState) {
+                    showError('Invalid state parameter - possible CSRF attack');
+                    sessionStorage.removeItem('oauth_state');
+                    history.replaceState(null, '', window.location.pathname);
+                    return true;
+                }
+                
+                sessionStorage.removeItem('oauth_state');
+                
+                // Save token to localStorage
+                localStorage.setItem('id_token', idToken);
+                
+                // Clean URL
+                history.replaceState(null, '', window.location.pathname);
+                
+                // Display user info
+                displayUserInfo(idToken);
+                return true;
+            }
+            
+            return false;
+        }
+
+        // Logout function
+        function logout() {
+            localStorage.removeItem('id_token');
+            showLogin();
+        }
+
+        // Initialize the app
+        function init() {
+            // First, handle OAuth callback if present
+            if (handleCallback()) {
+                return;
+            }
+            
+            // Check for existing token
+            const token = localStorage.getItem('id_token');
+            
+            if (token && !isTokenExpired(token)) {
+                displayUserInfo(token);
+            } else {
+                // Clear expired token
+                if (token) {
+                    localStorage.removeItem('id_token');
+                }
+                showLogin();
+            }
+            
+            // Set up login button
+            document.getElementById('loginButton').onclick = function(e) {
+                e.preventDefault();
+                window.location.href = buildAuthUrl();
+            };
+        }
+
+        // Run on page load
+        window.addEventListener('DOMContentLoaded', init);
+    </script>
+</body>
+</html>
