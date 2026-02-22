@@ -1,0 +1,43 @@
+name: 'Frontend Pull Request'
+description: 'Lints, tests, and builds the frontend service'
+
+runs:
+  using: "composite"
+  steps:
+    - name: Set up Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+
+    - name: Install dependencies
+      shell: bash
+      working-directory: services/frontend
+      run: |
+        npm ci
+
+    - name: Lint
+      shell: bash
+      working-directory: services/frontend
+      run: |
+        npm run lint
+
+    - name: Build
+      shell: bash
+      working-directory: services/frontend
+      run: |
+        npm run build
+
+    - name: Build Docker image
+      shell: bash
+      working-directory: services/frontend
+      run: |
+        # Create temporary Dockerfile for build test
+        cat > Dockerfile.test <<EOF
+        FROM nginx:alpine
+        COPY oauth-login.html /usr/share/nginx/html/index.html
+        COPY nginx.conf /etc/nginx/conf.d/default.conf
+        EXPOSE 8080
+        CMD ["nginx", "-g", "daemon off;"]
+        EOF
+        
+        docker build -f Dockerfile.test -t frontend:test .

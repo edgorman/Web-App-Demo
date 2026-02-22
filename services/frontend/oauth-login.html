@@ -214,11 +214,11 @@
             
             // Note: Using OAuth2 Implicit Flow (response_type=id_token)
             // While the Authorization Code Flow with PKCE is more secure,
-            // the implicit flow is simpler for pure client-side apps with no backend.
+            // the implicit flow is simpler for client-side apps without server-side token exchange.
             // Trade-offs:
             //   - Implicit: Token in URL fragment (client-side only, never sent to server)
-            //   - PKCE: Requires backend to exchange code for token
-            // For "dirt cheap" architecture with NO backend, implicit flow is appropriate.
+            //   - PKCE: Requires backend server to exchange code for token
+            // For cost-optimized architecture with stateless backend services, implicit flow is appropriate.
             const params = new URLSearchParams({
                 client_id: CONFIG.clientId,
                 redirect_uri: CONFIG.redirectUri,
@@ -265,11 +265,11 @@
                 
                 // Save token to localStorage
                 // Security Note: localStorage is vulnerable to XSS attacks
-                // Trade-offs for this "no database" architecture:
+                // Trade-offs for this stateless authentication architecture:
                 //   - localStorage: Persists across browser sessions, simple client-side storage
                 //   - sessionStorage: More secure but doesn't persist across tabs/sessions
-                //   - httpOnly cookies: Most secure but requires backend server
-                // For "dirt cheap" pure client-side app, localStorage is the appropriate choice.
+                //   - httpOnly cookies: Most secure but requires server-side session management
+                // For cost-optimized architecture with stateless Cloud Run services, localStorage is appropriate.
                 // Mitigation: Use Content-Security-Policy headers to prevent XSS
                 localStorage.setItem('id_token', idToken);
                 

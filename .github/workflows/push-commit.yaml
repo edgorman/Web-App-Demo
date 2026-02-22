@@ -17,6 +17,7 @@ jobs:
       infrastructure-prod: ${{ steps.diff.outputs.infrastructure-prod }}
       infrastructure-dev: ${{ steps.diff.outputs.infrastructure-dev }}
       service-backend: ${{ steps.diff.outputs.service-backend }}
+      service-frontend: ${{ steps.diff.outputs.service-frontend }}
     steps:
       - uses: actions/checkout@v5
       - id: diff
@@ -65,7 +66,9 @@ jobs:
           project_id: 'web-app-demo-prod'
           workload_identity_provider: ${{ vars.WORKLOAD_IDENTITY_PROVIDER }}
           service_account: ${{ vars.SERVICE_ACCOUNT }}
-          secrets_list: ""
+          secrets_list: |
+            TF_VAR_identity_platform_providers__google_com__client_id=google_oauth_client_id
+            TF_VAR_identity_platform_providers__google_com__client_secret=google_oauth_client_secret
       - uses: ./.github/actions/terraform-push-commit
         with:
           terraform_directory: 'infrastructure/env'
@@ -92,7 +95,9 @@ jobs:
           project_id: 'web-app-demo-dev'
           workload_identity_provider: ${{ vars.WORKLOAD_IDENTITY_PROVIDER }}
           service_account: ${{ vars.SERVICE_ACCOUNT }}
-          secrets_list: ""
+          secrets_list: |
+            TF_VAR_identity_platform_providers__google_com__client_id=google_oauth_client_id
+            TF_VAR_identity_platform_providers__google_com__client_secret=google_oauth_client_secret
       - uses: ./.github/actions/terraform-push-commit
         with:
           terraform_directory: 'infrastructure/env'
@@ -140,3 +145,63 @@ jobs:
           region: 'europe-west1'
           workload_identity_provider: ${{ vars.WORKLOAD_IDENTITY_PROVIDER }}
           service_account: ${{ vars.SERVICE_ACCOUNT }}
+
+  frontend-prod:
+    needs: [diff, infrastructure-prod]
+    if: |
+      always() &&
+      needs.diff.result == 'success' &&
+      needs.diff.outputs.service-frontend == 'true' &&
+      github.ref_name == 'main' &&
+      (needs.infrastructure-prod.result == 'success' || needs.infrastructure-prod.result == 'skipped')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@v5
+      - id: secrets
+        uses: ./.github/actions/gcp-secret-manager
+        with:
+          project_id: ${{ vars.ROOT_PROJECT_ID }}
+          workload_identity_provider: ${{ vars.WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: ${{ vars.SERVICE_ACCOUNT }}
+          secrets_list: |
+            GOOGLE_OAUTH_CLIENT_ID=google_oauth_client_id
+      - uses: ./.github/actions/frontend-push-commit
+        with:
+          project_id: 'web-app-demo-prod'
+          region: 'europe-west1'
+          workload_identity_provider: ${{ vars.WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: ${{ vars.SERVICE_ACCOUNT }}
+          google_oauth_client_id: ${{ steps.secrets.outputs.GOOGLE_OAUTH_CLIENT_ID }}
+
+  frontend-dev:
+    needs: [diff, infrastructure-dev]
+    if: |
+      always() &&
+      needs.diff.result == 'success' &&
+      needs.diff.outputs.service-frontend == 'true' &&
+      github.ref_name == 'develop' &&
+      (needs.infrastructure-dev.result == 'success' || needs.infrastructure-dev.result == 'skipped')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@v5
+      - id: secrets
+        uses: ./.github/actions/gcp-secret-manager
+        with:
+          project_id: ${{ vars.ROOT_PROJECT_ID }}
+          workload_identity_provider: ${{ vars.WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: ${{ vars.SERVICE_ACCOUNT }}
+          secrets_list: |
+            GOOGLE_OAUTH_CLIENT_ID=google_oauth_client_id
+      - uses: ./.github/actions/frontend-push-commit
+        with:
+          project_id: 'web-app-demo-dev'
+          region: 'europe-west1'
+          workload_identity_provider: ${{ vars.WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: ${{ vars.SERVICE_ACCOUNT }}
+          google_oauth_client_id: ${{ steps.secrets.outputs.GOOGLE_OAUTH_CLIENT_ID }}

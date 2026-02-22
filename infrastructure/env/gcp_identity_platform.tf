@@ -3,22 +3,30 @@ resource "google_identity_platform_config" "default" {
 
   project = var.project_id
 
-  # Allow multiple accounts per email
   sign_in {
     allow_duplicate_emails = false
   }
 
-  # Configure authorized domains for OAuth redirects
-  authorized_domains = var.identity_platform_authorized_domains
+  # Authorized domains will be updated via gcloud in GitHub Actions after Cloud Run deployment
+  # Initial list includes localhost for local development
+  authorized_domains = ["localhost"]
+
+  lifecycle {
+    ignore_changes = [
+      authorized_domains
+    ]
+  }
 }
 
-resource "google_identity_platform_default_supported_idp_config" "google" {
+resource "google_identity_platform_default_supported_idp_config" "providers" {
+  for_each = var.identity_platform_providers
+
   depends_on = [google_identity_platform_config.default]
 
   project = var.project_id
-  idp_id  = "google.com"
-  enabled = true
+  idp_id  = each.key
+  enabled = each.value.enabled
 
-  client_id     = var.google_oauth_client_id
-  client_secret = var.google_oauth_client_secret
+  client_id     = each.value.client_id
+  client_secret = each.value.client_secret
 }

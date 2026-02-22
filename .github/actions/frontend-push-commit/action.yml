@@ -1,0 +1,135 @@
+name: 'Frontend Push Commit'
+description: 'Builds and deploys the frontend service to Cloud Run with Identity Platform configuration'
+
+inputs:
+  project_id:
+    description: 'GCP Project ID'
+    required: true
+  region:
+    description: 'GCP Region'
+    required: true
+  service_name:
+    description: 'Cloud Run service name'
+    required: false
+    default: 'frontend'
+  workload_identity_provider:
+    description: 'The Workload Identity Provider resource name'
+    required: true
+  service_account:
+    description: 'The Google Service Account email'
+    required: true
+  google_oauth_client_id:
+    description: 'Google OAuth Client ID for Identity Platform'
+    required: true
+
+runs:
+  using: "composite"
+  steps:
+    - name: Authenticate to Google Cloud
+      uses: google-github-actions/auth@v2
+      with:
+        workload_identity_provider: ${{ inputs.workload_identity_provider }}
+        service_account: ${{ inputs.service_account }}
+
+    - name: Set up Cloud SDK
+      uses: google-github-actions/setup-gcloud@v2
+
+    - name: Get Identity Platform API Key
+      id: get-api-key
+      shell: bash
+      run: |
+        # Get the Web API key from Identity Platform config
+        API_KEY=$(gcloud alpha identity api-keys list \
+          --project=${{ inputs.project_id }} \
+          --filter="displayName:Browser key (auto created by Identity Platform)" \
+          --format="value(name)" \
+          --limit=1 2>/dev/null || echo "")
+        
+        if [ -z "$API_KEY" ]; then
+          echo "Warning: Could not find Identity Platform API key, using placeholder"
+          echo "api_key=IDENTITY_PLATFORM_API_KEY" >> $GITHUB_OUTPUT
+        else
+          # Extract just the key ID from the full resource name
+          KEY_VALUE=$(gcloud alpha identity api-keys get-key-string $API_KEY --format="value(keyString)" 2>/dev/null || echo "IDENTITY_PLATFORM_API_KEY")
+          echo "api_key=$KEY_VALUE" >> $GITHUB_OUTPUT
+        fi
+
+    - name: Get Backend Service URL
+      id: get-backend-url
+      shell: bash
+      run: |
+        BACKEND_URL=$(gcloud run services describe backend \
+          --project=${{ inputs.project_id }} \
+          --region=${{ inputs.region }} \
+          --format="value(status.url)" 2>/dev/null || echo "")
+        
+        if [ -z "$BACKEND_URL" ]; then
+          echo "backend_url=" >> $GITHUB_OUTPUT
+        else
+          echo "backend_url=$BACKEND_URL" >> $GITHUB_OUTPUT
+        fi
+
+    - name: Configure Docker for Artifact Registry
+      shell: bash
+      run: |
+        gcloud auth configure-docker ${{ inputs.region }}-docker.pkg.dev
+
+    - name: Build Docker image with environment variables
+      shell: bash
+      working-directory: services/frontend
+      env:
+        BUILDX_NO_DEFAULT_ATTESTATIONS: 1
+      run: |
+        # Create a temporary index.html with injected config
+        cp oauth-login.html index.html.tmp
+        
+        # Inject environment variables into the config
+        sed -i "s|projectId: 'YOUR_PROJECT_ID'|projectId: '${{ inputs.project_id }}'|g" index.html.tmp
+        sed -i "s|apiKey: 'YOUR_API_KEY'|apiKey: '${{ steps.get-api-key.outputs.api_key }}'|g" index.html.tmp
+        sed -i "s|clientId: 'YOUR_CLIENT_ID.apps.googleusercontent.com'|clientId: '${{ inputs.google_oauth_client_id }}'|g" index.html.tmp
+        
+        # Replace the placeholder in Dockerfile
+        cat > Dockerfile.build <<EOF
+        FROM nginx:alpine
+        COPY index.html.tmp /usr/share/nginx/html/index.html
+        COPY nginx.conf /etc/nginx/conf.d/default.conf
+        EXPOSE 8080
+        CMD ["nginx", "-g", "daemon off;"]
+        EOF
+        
+        # Build and tag image
+        docker build -f Dockerfile.build \
+          -t ${{ inputs.region }}-docker.pkg.dev/${{ inputs.project_id }}/frontend/frontend:${{ github.sha }} \
+          -t ${{ inputs.region }}-docker.pkg.dev/${{ inputs.project_id }}/frontend/frontend:latest .
+
+    - name: Push Docker image
+      shell: bash
+      run: |
+        docker push --all-tags ${{ inputs.region }}-docker.pkg.dev/${{ inputs.project_id }}/frontend/frontend
+
+    - name: Deploy to Cloud Run
+      shell: bash
+      run: |
+        gcloud run deploy ${{ inputs.service_name }} \
+          --image=${{ inputs.region }}-docker.pkg.dev/${{ inputs.project_id }}/frontend/frontend:${{ github.sha }} \
+          --region=${{ inputs.region }} \
+          --project=${{ inputs.project_id }} \
+          --platform=managed
+
+    - name: Update Identity Platform authorized domains
+      shell: bash
+      run: |
+        # Get the frontend service URL
+        FRONTEND_URL=$(gcloud run services describe ${{ inputs.service_name }} \
+          --project=${{ inputs.project_id }} \
+          --region=${{ inputs.region }} \
+          --format="value(status.url)")
+        
+        # Extract domain from URL (remove https://)
+        FRONTEND_DOMAIN=$(echo $FRONTEND_URL | sed 's|https://||')
+        
+        # Update authorized domains (this requires gcloud beta)
+        gcloud beta identity platforms update-config \
+          --project=${{ inputs.project_id }} \
+          --add-authorized-domains=$FRONTEND_DOMAIN \
+          2>/dev/null || echo "Note: Could not update authorized domains automatically. Please add $FRONTEND_DOMAIN manually."

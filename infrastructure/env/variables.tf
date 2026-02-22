@@ -93,20 +93,12 @@ variable "frontend_max_instances" {
   default     = 10
 }
 
-variable "google_oauth_client_id" {
-  description = "Google OAuth 2.0 Client ID for Identity Platform"
-  type        = string
-  sensitive   = true
-}
-
-variable "google_oauth_client_secret" {
-  description = "Google OAuth 2.0 Client Secret for Identity Platform"
-  type        = string
-  sensitive   = true
-}
-
-variable "identity_platform_authorized_domains" {
-  description = "List of authorized domains for OAuth redirects in Identity Platform"
-  type        = list(string)
-  default     = ["localhost"]
+variable "identity_platform_providers" {
+  description = "Map of OAuth providers for Identity Platform (e.g., google.com, facebook.com)"
+  type = map(object({
+    enabled       = bool
+    client_id     = optional(string)
+    client_secret = optional(string)
+  }))
+  default = {}
 }
