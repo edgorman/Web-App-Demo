@@ -60,20 +60,27 @@ jobs:
       id-token: write
     steps:
       - uses: actions/checkout@v5
-      - id: secrets
+      - id: root-secrets
         uses: ./.github/actions/gcp-secret-manager
         with:
-          project_id: 'web-app-demo-root'  # Read OAuth secrets from root project
+          project_id: ${{ vars.ROOT_PROJECT_ID }}
           workload_identity_provider: ${{ vars.WORKLOAD_IDENTITY_PROVIDER }}
           service_account: ${{ vars.SERVICE_ACCOUNT }}
           secrets_list: |
             TF_VAR_google_oauth_client_id=google_oauth_client_id
             TF_VAR_google_oauth_client_secret=google_oauth_client_secret
+      - id: prod-secrets
+        uses: ./.github/actions/gcp-secret-manager
+        with:
+          project_id: 'web-app-demo-prod'
+          workload_identity_provider: ${{ vars.WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: ${{ vars.SERVICE_ACCOUNT }}
+          secrets_list: ''
       - uses: ./.github/actions/terraform-push-commit
         with:
           terraform_directory: 'infrastructure/env'
           config_directory: 'infrastructure/config/prod'
-          secrets: ${{ steps.secrets.outputs.secrets }}
+          secrets: ${{ steps.root-secrets.outputs.secrets }}${{ steps.prod-secrets.outputs.secrets }}
 
   infrastructure-dev:
     needs: [diff, infrastructure-root]
@@ -89,20 +96,27 @@ jobs:
       id-token: write
     steps:
       - uses: actions/checkout@v5
-      - id: secrets
+      - id: root-secrets
         uses: ./.github/actions/gcp-secret-manager
         with:
-          project_id: 'web-app-demo-root'  # Read OAuth secrets from root project
+          project_id: ${{ vars.ROOT_PROJECT_ID }}
           workload_identity_provider: ${{ vars.WORKLOAD_IDENTITY_PROVIDER }}
           service_account: ${{ vars.SERVICE_ACCOUNT }}
           secrets_list: |
             TF_VAR_google_oauth_client_id=google_oauth_client_id
             TF_VAR_google_oauth_client_secret=google_oauth_client_secret
+      - id: dev-secrets
+        uses: ./.github/actions/gcp-secret-manager
+        with:
+          project_id: 'web-app-demo-dev'
+          workload_identity_provider: ${{ vars.WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: ${{ vars.SERVICE_ACCOUNT }}
+          secrets_list: ''
       - uses: ./.github/actions/terraform-push-commit
         with:
           terraform_directory: 'infrastructure/env'
           config_directory: 'infrastructure/config/dev'
-          secrets: ${{ steps.secrets.outputs.secrets }}
+          secrets: ${{ steps.root-secrets.outputs.secrets }}${{ steps.dev-secrets.outputs.secrets }}
 
   backend-prod:
     needs: [diff, infrastructure-prod]
@@ -164,7 +178,7 @@ jobs:
       - id: secrets
         uses: ./.github/actions/gcp-secret-manager
         with:
-          project_id: 'web-app-demo-root'  # Read secrets from root project
+          project_id: ${{ vars.ROOT_PROJECT_ID }}
           workload_identity_provider: ${{ vars.WORKLOAD_IDENTITY_PROVIDER }}
           service_account: ${{ vars.SERVICE_ACCOUNT }}
           secrets_list: |
@@ -203,7 +217,7 @@ jobs:
       - id: secrets
         uses: ./.github/actions/gcp-secret-manager
         with:
-          project_id: 'web-app-demo-root'  # Read secrets from root project
+          project_id: ${{ vars.ROOT_PROJECT_ID }}
           workload_identity_provider: ${{ vars.WORKLOAD_IDENTITY_PROVIDER }}
           service_account: ${{ vars.SERVICE_ACCOUNT }}
           secrets_list: |

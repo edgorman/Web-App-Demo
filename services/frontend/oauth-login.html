@@ -105,13 +105,13 @@
         // Configuration - Values injected at build time via environment variables
         const CONFIG = {
             // GCP Project ID for Identity Platform
-            projectId: window.ENV_PROJECT_ID,
+            projectId: window.ENV_GCP_PROJECT_ID,
             
             // Web API Key from GCP Identity Platform (this is safe to expose publicly)
-            apiKey: window.ENV_API_KEY,
+            apiKey: window.ENV_IDENTITY_PLATFORM_API_KEY,
             
             // OAuth Client ID from GCP Console (safe to expose publicly)
-            clientId: window.ENV_CLIENT_ID,
+            clientId: window.ENV_OAUTH_CLIENT_ID,
             
             // Backend API URL (Cloud Run service)
             backendUrl: window.ENV_BACKEND_URL,

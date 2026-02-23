@@ -4,9 +4,9 @@ FROM nginx:alpine
 # Copy environment config
 COPY .env /tmp/.env
 
-# Create env.js from .env file
+# Create env.js from .env file at build time
 RUN apk add --no-cache bash && \
-    echo "// Auto-generated from .env" > /usr/share/nginx/html/env.js && \
+    echo "// Auto-generated from .env at build time" > /usr/share/nginx/html/env.js && \
     while IFS='=' read -r key value; do \
       # Skip empty lines and comments
       if [ -n "$key" ] && [ "${key:0:1}" != "#" ]; then \

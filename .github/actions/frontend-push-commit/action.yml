@@ -45,9 +45,9 @@ runs:
       working-directory: services/frontend
       run: |
         cat > .env <<EOF
-        ENV_PROJECT_ID=${{ inputs.project_id }}
-        ENV_API_KEY=${{ inputs.identity_platform_api_key }}
-        ENV_CLIENT_ID=${{ inputs.google_oauth_client_id }}
+        ENV_GCP_PROJECT_ID=${{ inputs.project_id }}
+        ENV_IDENTITY_PLATFORM_API_KEY=${{ inputs.identity_platform_api_key }}
+        ENV_OAUTH_CLIENT_ID=${{ inputs.google_oauth_client_id }}
         ENV_BACKEND_URL=${{ inputs.backend_url }}
         EOF
 
