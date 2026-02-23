@@ -52,7 +52,7 @@ resource "google_secret_manager_secret" "google_oauth_client_secret" {
 
 resource "google_secret_manager_secret_version" "google_oauth_client_secret_v1" {
   secret      = google_secret_manager_secret.google_oauth_client_secret.id
-  secret_data = var.google_oauth_client_secret
+  secret_data = google_identity_platform_default_supported_idp_config.google.client_secret
 }
 
 # Store Identity Platform API key in Secret Manager

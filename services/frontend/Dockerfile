@@ -4,13 +4,13 @@ FROM nginx:alpine
 # Copy environment config
 COPY .env /tmp/.env
 
-# Create env.js from .env file (add window.ENV_ prefix)
+# Create env.js from .env file
 RUN apk add --no-cache bash && \
     echo "// Auto-generated from .env" > /usr/share/nginx/html/env.js && \
     while IFS='=' read -r key value; do \
       # Skip empty lines and comments
       if [ -n "$key" ] && [ "${key:0:1}" != "#" ]; then \
-        echo "window.ENV_$key = '$value';" >> /usr/share/nginx/html/env.js; \
+        echo "window.$key = '$value';" >> /usr/share/nginx/html/env.js; \
       fi \
     done < /tmp/.env && \
     rm /tmp/.env
