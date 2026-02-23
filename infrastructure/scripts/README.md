@@ -1,248 +1,293 @@
 # Infrastructure Bootstrap Scripts
 
-This directory contains scripts to automate the setup of Google Identity Platform and OAuth credentials for new environments.
+This directory contains scripts to automate the setup of Google Identity Platform and OAuth credentials in the root project.
 
 ## Overview
 
-The bootstrap process has been automated to eliminate manual steps and avoid the chicken-and-egg problem with OAuth credentials and Identity Platform configuration.
+Identity Platform and OAuth credentials are configured **ONCE** in the root project and shared across **ALL** environments (dev, staging, prod, etc.). This eliminates the need to bootstrap each environment separately.
 
 ## Quick Start
 
-### For a New Environment
+### One-Time Root Setup
 
-Run these commands in order:
-
-```bash
-# 1. Bootstrap Identity Platform (creates OAuth cred credentials and secrets)
-./infrastructure/scripts/bootstrap-identity-platform.sh <project-id> <environment>
-
-# 2. Apply Terraform configuration
-cd infrastructure/env
-terraform init
-terraform apply -var-file=../config/<environment>/terraform.tfvars
-
-# 3. Retrieve and store API key
-cd ../..
-./infrastructure/scripts/post-terraform-identity-platform.sh <project-id> <environment>
-```
-
-### Example: Setting up Dev Environment
+Run this **once** to set up Identity Platform for all environments:
 
 ```bash
-# Bootstrap
-./infrastructure/scripts/bootstrap-identity-platform.sh web-app-demo-dev dev
+# 1. Bootstrap Identity Platform in root project
+./infrastructure/scripts/bootstrap-identity-platform.sh web-app-demo-root
 
-# Terraform
-cd infrastructure/env
+# 2. Apply root Terraform
+cd infrastructure/root
 terraform init
+terraform apply
+
+# 3. Apply environment Terraform (for each environment)
+cd infrastructure/env
 terraform apply -var-file=../config/dev/terraform.tfvars
+terraform apply -var-file=../config/prod/terraform.tfvars
 
-# Post-Terraform
+# 4. Retrieve and store API key (after ANY environment is configured)
 cd ../..
-./infrastructure/scripts/post-terraform-identity-platform.sh web-app-demo-dev dev
+./infrastructure/scripts/post-terraform-identity-platform.sh web-app-demo-dev web-app-demo-root
 ```
+
+That's it! All environments now share the same OAuth credentials.
+
+## Why This Approach?
+
+### Centralized Management
+- ✅ OAuth credentials created **once** in root project
+- ✅ All environments use the **same** credentials
+- ✅ No per-environment OAuth client management
+- ✅ Simpler secret rotation (update root, all envs inherit)
+
+### Simplified Bootstrapping
+- ✅ Bootstrap script run **once** instead of per-environment
+- ✅ Fewer manual steps
+- ✅ Less room for error
+- ✅ Faster environment setup
+
+### Security
+- ✅ All secrets centralized in root project
+- ✅ Environment projects read secrets via data sources
+- ✅ IAM controls access to secrets
+- ✅ Audit logs in single location
 
 ## Script Details
 
 ### 1. bootstrap-identity-platform.sh
 
-**Purpose**: Automates OAuth client creation and initial Secret Manager setup
-
-**What it does**:
-- Enables required GCP APIs (Identity Platform, Secret Manager, IAP)
-- Creates OAuth consent screen (brand) if it doesn't exist
-- Creates OAuth client credentials for Identity Platform
-- Stores OAuth credentials in Secret Manager
-- Creates placeholder for Identity Platform API key
-- Generates `terraform.tfvars` file with credentials
+**Purpose**: One-time setup of OAuth credentials in root project
 
 **Usage**:
 ```bash
-./bootstrap-identity-platform.sh <project-id> [environment]
+./bootstrap-identity-platform.sh [root-project-id]
 ```
 
-**Arguments**:
-- `project-id` (required): GCP project ID (e.g., web-app-demo-dev)
-- `environment` (optional): Environment name (default: dev)
+**Default**: `web-app-demo-root`
+
+**What it does**:
+- Enables required APIs in root project
+- Creates OAuth consent screen (brand)
+- Creates OAuth client credentials (shared)
+- Stores credentials in root project Secret Manager
+- Creates `infrastructure/root/terraform.tfvars`
 
 **Output**:
-- Secret Manager secrets:
+- Secrets in root project:
   - `google_oauth_client_id`
   - `google_oauth_client_secret`
   - `identity_platform_api_key` (placeholder)
-- File: `infrastructure/config/<environment>/terraform.tfvars`
-
-**Prerequisites**:
-- `gcloud` CLI installed and authenticated
-- Project creator or owner permissions
-- `jq` installed for JSON parsing
+- File: `infrastructure/root/terraform.tfvars`
 
 ### 2. post-terraform-identity-platform.sh
 
-**Purpose**: Retrieves Identity Platform API key after Terraform creates the configuration
-
-**What it does**:
-- Retrieves the auto-created Identity Platform API key
-- Updates the `identity_platform_api_key` secret in Secret Manager
-- Validates the key is stored correctly
+**Purpose**: Retrieve Identity Platform API key after environment is configured
 
 **Usage**:
 ```bash
-./post-terraform-identity-platform.sh <project-id> [environment]
+./post-terraform-identity-platform.sh <env-project-id> [root-project-id]
 ```
 
-**Arguments**:
-- `project-id` (required): GCP project ID
-- `environment` (optional): Environment name (default: dev)
-
-**Prerequisites**:
-- Terraform has been successfully applied
-- Identity Platform configuration exists
-
-## Why This Approach?
-
-### The Problem
-
-Previously, bootstrapping a new environment required:
-1. Manually creating OAuth credentials in GCP Console
-2. Manually copying client ID and secret
-3. Running Terraform with variables
-4. Manually retrieving Identity Platform API key
-5. Manually adding API key to Secret Manager
-
-This was error-prone and time-consuming.
-
-### The Solution
-
-The bootstrap scripts automate all of this:
-- OAuth credentials are created programmatically via `gcloud`
-- All secrets are automatically stored in Secret Manager
-- Terraform variables file is auto-generated
-- API key retrieval is automated post-Terraform
-
-## Secrets Management
-
-All secrets are stored in Google Secret Manager:
-
-| Secret Name | Description | Created By |
-|------------|-------------|------------|
-| `google_oauth_client_id` | OAuth 2.0 Client ID | bootstrap script |
-| `google_oauth_client_secret` | OAuth 2.0 Client Secret | bootstrap script |
-| `identity_platform_api_key` | Identity Platform Web API Key | post-terraform script |
-
-## CI/CD Integration
-
-GitHub Actions workflows automatically read these secrets from Secret Manager during deployment:
-
-```yaml
-- name: Get OAuth Client ID
-  run: |
-    CLIENT_ID=$(gcloud secrets versions access latest \
-      --secret="google_oauth_client_id" \
-      --project="${{ inputs.project_id }}")
-    echo "TF_VAR_google_oauth_client_id=$CLIENT_ID" >> $GITHUB_ENV
+**Example**:
+```bash
+./post-terraform-identity-platform.sh web-app-demo-dev web-app-demo-root
 ```
 
-This ensures:
-- No secrets in version control
-- Secrets are environment-specific
-- Automated deployments work seamlessly
+**What it does**:
+- Retrieves API key from environment project (where Identity Platform was configured)
+- Stores API key in root project Secret Manager
+- Makes API key available to all environments
 
-## Terraform Integration
+**Note**: Run this after **any** environment has configured Identity Platform. You only need to run it once, not per environment.
 
-The Terraform configuration uses these secrets through variables:
+## Architecture
+
+```
+Root Project (web-app-demo-root)
+├── OAuth Client Credentials (shared)
+│   ├── google_oauth_client_id
+│   └── google_oauth_client_secret
+├── Identity Platform API Key (shared)
+│   └── identity_platform_api_key
+└── GitHub Actions Service Account
+
+Environment Projects
+├── Dev (web-app-demo-dev)
+│   ├── Identity Platform Config
+│   │   ├── Reads OAuth creds from root
+│   │   └── Authorized domains: localhost + dev URLs
+│   └── Cloud Run Services (backend, frontend)
+│
+└── Prod (web-app-demo-prod)
+    ├── Identity Platform Config
+    │   ├── Reads OAuth creds from root
+    │   └── Authorized domains: localhost + prod URLs
+    └── Cloud Run Services (backend, frontend)
+```
+
+## Environment Configuration
+
+Each environment's `terraform.tfvars` is minimal:
 
 ```hcl
-variable "google_oauth_client_id" {
-  description = "Google OAuth 2.0 Client ID for Identity Platform"
-  type        = string
-  sensitive   = true
+# infrastructure/config/dev/terraform.tfvars
+project_id = "web-app-demo-dev"
+root_project_id = "web-app-demo-root"
+```
+
+No OAuth credentials needed! They're read from root automatically.
+
+## Terraform Data Sources
+
+Environments read secrets using data sources:
+
+```hcl
+# infrastructure/env/gcp_identity_platform.tf
+data "google_secret_manager_secret_version" "google_oauth_client_id" {
+  project = var.root_project_id  # web-app-demo-root
+  secret  = "google_oauth_client_id"
+}
+
+resource "google_identity_platform_default_supported_idp_config" "google" {
+  client_id = data.google_secret_manager_secret_version.google_oauth_client_id.secret_data
+  # ...
 }
 ```
 
-During CI/CD, these are injected as environment variables:
-- `TF_VAR_google_oauth_client_id`
-- `TF_VAR_google_oauth_client_secret`
+## CI/CD Integration
+
+GitHub Actions read secrets from root project:
+
+```yaml
+- id: secrets
+  uses: ./.github/actions/gcp-secret-manager
+  with:
+    project_id: 'web-app-demo-root'  # Always root!
+    secrets_list: |
+      GOOGLE_OAUTH_CLIENT_ID=google_oauth_client_id
+      IDENTITY_PLATFORM_API_KEY=identity_platform_api_key
+```
+
+All environments get the same secrets automatically.
+
+## Adding a New Environment
+
+To add a new environment (e.g., staging):
+
+1. **No bootstrap needed!** OAuth credentials already exist in root.
+
+2. Create config file:
+```bash
+cat > infrastructure/config/staging/terraform.tfvars << EOF
+project_id = "web-app-demo-staging"
+root_project_id = "web-app-demo-root"
+EOF
+```
+
+3. Apply Terraform:
+```bash
+cd infrastructure/env
+terraform apply -var-file=../config/staging/terraform.tfvars
+```
+
+That's it! The new environment uses existing OAuth credentials from root.
+
+## Rotating Credentials
+
+To rotate OAuth credentials (affects **all** environments):
+
+```bash
+# 1. Re-run bootstrap (will prompt to create new client)
+./infrastructure/scripts/bootstrap-identity-platform.sh web-app-demo-root
+
+# 2. Update root Terraform
+cd infrastructure/root
+terraform apply
+
+# 3. Update environment Terraform (optional, picks up changes automatically)
+cd infrastructure/env
+terraform apply -var-file=../config/dev/terraform.tfvars
+terraform apply -var-file=../config/prod/terraform.tfvars
+```
+
+All environments immediately use the new credentials.
 
 ## Troubleshooting
 
-### "Brand already exists" error
+### "Cannot access secret"
 
-This is normal if you've run the script before. The script will use the existing brand.
+**Problem**: Environment can't read secrets from root project
 
-### "Cannot retrieve client secret"
+**Solution**: Grant the environment's service account access:
+```bash
+gcloud secrets add-iam-policy-binding google_oauth_client_id \
+  --project=web-app-demo-root \
+  --member="serviceAccount:github-actions@web-app-demo-dev.iam.gserviceaccount.com" \
+  --role="roles/secretmanager.secretAccessor"
+```
 
-OAuth client secrets cannot be retrieved after creation. If you lose the secret:
-1. Create a new OAuth client (script will prompt you)
-2. Or manually provide the secret when prompted
+(This should be automated in root Terraform, but manual fix shown above)
 
 ### "API key not found"
 
-The API key is created when Terraform configures Identity Platform. If the post-terraform script can't find it:
-1. Check that Terraform apply completed successfully
-2. Manually retrieve the key from GCP Console → APIs & Credentials
-3. Paste it when prompted by the script
+**Problem**: Forgot to run post-terraform script
 
-### Permission Errors
-
-Ensure your gcloud user has these roles:
-- Project Owner or Editor
-- Secret Manager Admin
-- Identity Platform Admin
-
-## Re-running Scripts
-
-### Safe to Re-run
-
-Both scripts are idempotent and safe to re-run:
-- They check for existing resources before creating
-- They update existing secrets with new versions
-- They won't duplicate OAuth clients
-
-### When to Re-run
-
-**Bootstrap script**: Run again if you need to create a new OAuth client or rotate credentials
-
-**Post-Terraform script**: Run after any Terraform changes that might affect the API key
-
-## Manual Cleanup
-
-To remove Identity Platform configuration:
-
+**Solution**: Run it now (using any configured environment):
 ```bash
-# Delete Terraform resources
-cd infrastructure/env
-terraform destroy -var-file=../config/<environment>/terraform.tfvars
-
-# Delete secrets (optional)
-gcloud secrets delete google_oauth_client_id --project=<project-id>
-gcloud secrets delete google_oauth_client_secret --project=<project-id>
-gcloud secrets delete identity_platform_api_key --project=<project-id>
-
-# Delete OAuth client (optional)
-# This must be done via GCP Console
+./infrastructure/scripts/post-terraform-identity-platform.sh web-app-demo-dev web-app-demo-root
 ```
 
-## Security Best Practices
+### "Different OAuth clients per environment?"
 
-1. **Never commit secrets**: The scripts store everything in Secret Manager
-2. **Use separate OAuth clients per environment**: Dev, staging, and prod should have different credentials
-3. **Rotate credentials regularly**: Re-run bootstrap script with new clients
-4. **Audit access**: Monitor Secret Manager access logs
-5. **Least privilege**: Grant minimal permissions to service accounts
+**Question**: What if I want separate OAuth clients for dev/prod?
 
-## Next Steps
+**Answer**: Not recommended with this architecture, but possible:
+1. Create additional OAuth clients in root
+2. Store them as `google_oauth_client_id_prod`, etc.
+3. Update environment Terraform to reference environment-specific secrets
 
-After running these scripts:
+However, this defeats the purpose of centralization. Better to use the same client across environments.
 
-1. Configure authorized domains in `gcp_identity_platform.tf` if needed
-2. Deploy frontend and backend services via CI/CD
-3. Test OAuth login flow
-4. Monitor Identity Platform metrics in GCP Console
+## Security Considerations
+
+### Shared Credentials
+- Same OAuth client used across all environments
+- Acceptable for internal/development applications  
+- For production with strict security: use separate OAuth clients per environment
+
+### Secret Access
+- Root project secrets accessible to all environment service accounts
+- Use IAM to restrict which environments can access which secrets
+- Audit logs track all secret access
+
+### Best Practices
+1. Use root project **only** for shared resources
+2. Grant least privilege to environment service accounts
+3. Rotate credentials regularly (every 90 days)
+4. Monitor secret access via Cloud Audit Logs
+5. For production: consider environment-specific OAuth clients
+
+## Summary
+
+**Before** (per-environment bootstrap):
+- Run bootstrap script for dev
+- Run bootstrap script for staging  
+- Run bootstrap script for prod
+- Manage 3 sets of OAuth credentials
+- 3 separate tfvars files with secrets
+
+**After** (centralized root bootstrap):
+- Run bootstrap script **once** for root
+- All environments use same credentials
+- Simple tfvars files (no secrets)
+- Single source of truth
+- Much easier to manage
 
 ## Support
 
-For issues or questions:
-- Check the troubleshooting section above
-- Review Terraform plan output for configuration issues
-- Check GCP Console → Identity Platform for configuration status
+For issues:
+- Review root Terraform: `infrastructure/root/gcp_identity_platform.tf`
+- Review env Terraform: `infrastructure/env/gcp_identity_platform.tf`
+- Check workflows: `.github/workflows/push-commit.yaml`
+- Check secrets: `gcloud secrets list --project=web-app-demo-root`

@@ -63,7 +63,7 @@ jobs:
       - id: secrets
         uses: ./.github/actions/gcp-secret-manager
         with:
-          project_id: 'web-app-demo-prod'
+          project_id: 'web-app-demo-root'  # Read OAuth secrets from root project
           workload_identity_provider: ${{ vars.WORKLOAD_IDENTITY_PROVIDER }}
           service_account: ${{ vars.SERVICE_ACCOUNT }}
           secrets_list: |
@@ -92,7 +92,7 @@ jobs:
       - id: secrets
         uses: ./.github/actions/gcp-secret-manager
         with:
-          project_id: 'web-app-demo-dev'
+          project_id: 'web-app-demo-root'  # Read OAuth secrets from root project
           workload_identity_provider: ${{ vars.WORKLOAD_IDENTITY_PROVIDER }}
           service_account: ${{ vars.SERVICE_ACCOUNT }}
           secrets_list: |
@@ -164,7 +164,7 @@ jobs:
       - id: secrets
         uses: ./.github/actions/gcp-secret-manager
         with:
-          project_id: 'web-app-demo-prod'
+          project_id: 'web-app-demo-root'  # Read secrets from root project
           workload_identity_provider: ${{ vars.WORKLOAD_IDENTITY_PROVIDER }}
           service_account: ${{ vars.SERVICE_ACCOUNT }}
           secrets_list: |
@@ -203,7 +203,7 @@ jobs:
       - id: secrets
         uses: ./.github/actions/gcp-secret-manager
         with:
-          project_id: 'web-app-demo-dev'
+          project_id: 'web-app-demo-root'  # Read secrets from root project
           workload_identity_provider: ${{ vars.WORKLOAD_IDENTITY_PROVIDER }}
           service_account: ${{ vars.SERVICE_ACCOUNT }}
           secrets_list: |

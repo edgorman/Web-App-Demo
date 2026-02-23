@@ -1,3 +1,19 @@
+# Google Identity Platform Configuration (Environment-Specific)
+# OAuth credentials are stored in root project and accessed here
+# Each environment configures its own Identity Platform instance with environment-specific authorized domains
+
+# Data sources to read OAuth credentials from root project Secret Manager
+data "google_secret_manager_secret_version" "google_oauth_client_id" {
+  project = var.root_project_id
+  secret  = "google_oauth_client_id"
+}
+
+data "google_secret_manager_secret_version" "google_oauth_client_secret" {
+  project = var.root_project_id
+  secret  = "google_oauth_client_secret"
+}
+
+# Configure Identity Platform for this environment
 resource "google_identity_platform_config" "default" {
   depends_on = [google_project_service.env_services]
 
@@ -7,7 +23,7 @@ resource "google_identity_platform_config" "default" {
     allow_duplicate_emails = false
   }
 
-  # Authorized domains include localhost and backend/frontend Cloud Run URLs
+  # Authorized domains include localhost and this environment's Cloud Run URLs
   authorized_domains = concat(
     ["localhost"],
     [replace(google_cloud_run_v2_service.backend.uri, "https://", "")],
@@ -15,6 +31,7 @@ resource "google_identity_platform_config" "default" {
   )
 }
 
+# Configure Google as OAuth provider using credentials from root project
 resource "google_identity_platform_default_supported_idp_config" "google" {
   depends_on = [google_identity_platform_config.default]
 
@@ -22,48 +39,7 @@ resource "google_identity_platform_default_supported_idp_config" "google" {
   idp_id  = "google.com"
   enabled = true
 
-  client_id     = var.google_oauth_client_id
-  client_secret = var.google_oauth_client_secret
-}
-
-# Store OAuth credentials in Secret Manager for GitHub Actions
-resource "google_secret_manager_secret" "google_oauth_client_id" {
-  project   = var.project_id
-  secret_id = "google_oauth_client_id"
-
-  replication {
-    auto {}
-  }
-}
-
-resource "google_secret_manager_secret_version" "google_oauth_client_id_v1" {
-  secret      = google_secret_manager_secret.google_oauth_client_id.id
-  secret_data = google_identity_platform_default_supported_idp_config.google.client_id
-}
-
-resource "google_secret_manager_secret" "google_oauth_client_secret" {
-  project   = var.project_id
-  secret_id = "google_oauth_client_secret"
-
-  replication {
-    auto {}
-  }
-}
-
-resource "google_secret_manager_secret_version" "google_oauth_client_secret_v1" {
-  secret      = google_secret_manager_secret.google_oauth_client_secret.id
-  secret_data = google_identity_platform_default_supported_idp_config.google.client_secret
-}
-
-# Store Identity Platform API key in Secret Manager
-# This will be populated after Identity Platform creates the API key
-resource "google_secret_manager_secret" "identity_platform_api_key" {
-  project   = var.project_id
-  secret_id = "identity_platform_api_key"
-
-  replication {
-    auto {}
-  }
-
-  depends_on = [google_identity_platform_config.default]
+  # Use OAuth credentials from root project
+  client_id     = data.google_secret_manager_secret_version.google_oauth_client_id.secret_data
+  client_secret = data.google_secret_manager_secret_version.google_oauth_client_secret.secret_data
 }

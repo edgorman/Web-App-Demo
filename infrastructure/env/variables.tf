@@ -3,6 +3,12 @@ variable "project_id" {
   type        = string
 }
 
+variable "root_project_id" {
+  description = "The GCP root project ID (where shared secrets are stored)"
+  type        = string
+  default     = "web-app-demo-root"
+}
+
 variable "region" {
   description = "The GCP region for resources"
   type        = string
@@ -91,16 +97,4 @@ variable "frontend_max_instances" {
   description = "Maximum number of instances for the frontend service"
   type        = number
   default     = 10
-}
-
-variable "google_oauth_client_id" {
-  description = "Google OAuth 2.0 Client ID for Identity Platform"
-  type        = string
-  sensitive   = true
-}
-
-variable "google_oauth_client_secret" {
-  description = "Google OAuth 2.0 Client Secret for Identity Platform"
-  type        = string
-  sensitive   = true
 }
