@@ -105,16 +105,16 @@
         // Configuration - Values injected at build time via environment variables
         const CONFIG = {
             // GCP Project ID for Identity Platform
-            projectId: window.ENV_PROJECT_ID || 'YOUR_PROJECT_ID',
+            projectId: window.ENV_PROJECT_ID,
             
             // Web API Key from GCP Identity Platform (this is safe to expose publicly)
-            apiKey: window.ENV_API_KEY || 'YOUR_API_KEY',
+            apiKey: window.ENV_API_KEY,
             
             // OAuth Client ID from GCP Console (safe to expose publicly)
-            clientId: window.ENV_CLIENT_ID || 'YOUR_CLIENT_ID.apps.googleusercontent.com',
+            clientId: window.ENV_CLIENT_ID,
             
             // Backend API URL (Cloud Run service)
-            backendUrl: window.ENV_BACKEND_URL || window.location.origin.replace('frontend', 'backend'),
+            backendUrl: window.ENV_BACKEND_URL,
             
             // Redirect URI - should match your Cloud Run service URL
             redirectUri: window.location.origin + window.location.pathname,
@@ -123,6 +123,13 @@
             authEndpoint: 'https://accounts.google.com/o/oauth2/v2/auth',
             tokenEndpoint: 'https://oauth2.googleapis.com/token',
         };
+
+        // Validate required configuration
+        if (!CONFIG.projectId || !CONFIG.apiKey || !CONFIG.clientId || !CONFIG.backendUrl) {
+            console.error('Missing required environment variables');
+            document.body.innerHTML = '<div style="color: red; padding: 20px;">Configuration Error: Missing required environment variables. Please check env.js is loaded correctly.</div>';
+            throw new Error('Missing required environment variables');
+        }
 
         // JWT decode function (no external libraries)
         function decodeJWT(token) {

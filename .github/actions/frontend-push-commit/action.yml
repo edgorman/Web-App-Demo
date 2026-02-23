@@ -24,6 +24,9 @@ inputs:
   identity_platform_api_key:
     description: 'Identity Platform API Key from Secret Manager'
     required: true
+  backend_url:
+    description: 'Backend Cloud Run service URL'
+    required: true
 
 runs:
   using: "composite"
@@ -37,31 +40,15 @@ runs:
     - name: Set up Cloud SDK
       uses: google-github-actions/setup-gcloud@v2
 
-    - name: Get Backend Service URL
-      id: get-backend-url
-      shell: bash
-      run: |
-        BACKEND_URL=$(gcloud run services describe backend \
-          --project=${{ inputs.project_id }} \
-          --region=${{ inputs.region }} \
-          --format="value(status.url)" 2>/dev/null || echo "")
-        
-        if [ -z "$BACKEND_URL" ]; then
-          echo "Error: Could not find backend service URL"
-          exit 1
-        fi
-        
-        echo "backend_url=$BACKEND_URL" >> $GITHUB_OUTPUT
-
     - name: Create .env file
       shell: bash
       working-directory: services/frontend
       run: |
         cat > .env <<EOF
-        ENV_PROJECT_ID=${{ inputs.project_id }}
-        ENV_API_KEY=${{ inputs.identity_platform_api_key }}
-        ENV_CLIENT_ID=${{ inputs.google_oauth_client_id }}
-        ENV_BACKEND_URL=${{ steps.get-backend-url.outputs.backend_url }}
+        PROJECT_ID=${{ inputs.project_id }}
+        API_KEY=${{ inputs.identity_platform_api_key }}
+        CLIENT_ID=${{ inputs.google_oauth_client_id }}
+        BACKEND_URL=${{ inputs.backend_url }}
         EOF
 
     - name: Configure Docker for Artifact Registry

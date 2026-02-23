@@ -38,7 +38,7 @@ resource "google_secret_manager_secret" "google_oauth_client_id" {
 
 resource "google_secret_manager_secret_version" "google_oauth_client_id_v1" {
   secret      = google_secret_manager_secret.google_oauth_client_id.id
-  secret_data = var.google_oauth_client_id
+  secret_data = google_identity_platform_default_supported_idp_config.google.client_id
 }
 
 resource "google_secret_manager_secret" "google_oauth_client_secret" {

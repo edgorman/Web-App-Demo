@@ -1,0 +1,38 @@
+name: 'Get Backend Service URL'
+description: 'Retrieves the Cloud Run backend service URL'
+
+inputs:
+  project_id:
+    description: 'GCP Project ID'
+    required: true
+  region:
+    description: 'GCP Region'
+    required: true
+  service_name:
+    description: 'Backend service name'
+    required: false
+    default: 'backend'
+
+outputs:
+  backend_url:
+    description: 'The URL of the backend Cloud Run service'
+    value: ${{ steps.get-url.outputs.backend_url }}
+
+runs:
+  using: "composite"
+  steps:
+    - name: Get Backend Service URL
+      id: get-url
+      shell: bash
+      run: |
+        BACKEND_URL=$(gcloud run services describe ${{ inputs.service_name }} \
+          --project=${{ inputs.project_id }} \
+          --region=${{ inputs.region }} \
+          --format="value(status.url)" 2>/dev/null || echo "")
+        
+        if [ -z "$BACKEND_URL" ]; then
+          echo "Error: Could not find backend service URL"
+          exit 1
+        fi
+        
+        echo "backend_url=$BACKEND_URL" >> $GITHUB_OUTPUT
