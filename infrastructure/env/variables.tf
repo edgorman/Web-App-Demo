@@ -104,17 +104,3 @@ variable "google_oauth_client_secret" {
   type        = string
   sensitive   = true
 }
-
-variable "identity_platform_providers" {
-  description = "Map of OAuth providers for Identity Platform (e.g., google.com, facebook.com)"
-  type = map(object({
-    enabled       = bool
-    client_id     = optional(string)
-    client_secret = optional(string)
-  }))
-  default = {
-    "google.com" = {
-      enabled = true
-    }
-  }
-}

@@ -67,8 +67,8 @@ jobs:
           workload_identity_provider: ${{ vars.WORKLOAD_IDENTITY_PROVIDER }}
           service_account: ${{ vars.SERVICE_ACCOUNT }}
           secrets_list: |
-            TF_VAR_identity_platform_providers__google_com__client_id=google_oauth_client_id
-            TF_VAR_identity_platform_providers__google_com__client_secret=google_oauth_client_secret
+            TF_VAR_google_oauth_client_id=google_oauth_client_id
+            TF_VAR_google_oauth_client_secret=google_oauth_client_secret
       - uses: ./.github/actions/terraform-push-commit
         with:
           terraform_directory: 'infrastructure/env'
@@ -96,8 +96,8 @@ jobs:
           workload_identity_provider: ${{ vars.WORKLOAD_IDENTITY_PROVIDER }}
           service_account: ${{ vars.SERVICE_ACCOUNT }}
           secrets_list: |
-            TF_VAR_identity_platform_providers__google_com__client_id=google_oauth_client_id
-            TF_VAR_identity_platform_providers__google_com__client_secret=google_oauth_client_secret
+            TF_VAR_google_oauth_client_id=google_oauth_client_id
+            TF_VAR_google_oauth_client_secret=google_oauth_client_secret
       - uses: ./.github/actions/terraform-push-commit
         with:
           terraform_directory: 'infrastructure/env'
@@ -169,6 +169,7 @@ jobs:
           service_account: ${{ vars.SERVICE_ACCOUNT }}
           secrets_list: |
             GOOGLE_OAUTH_CLIENT_ID=google_oauth_client_id
+            IDENTITY_PLATFORM_API_KEY=identity_platform_api_key
       - uses: ./.github/actions/frontend-push-commit
         with:
           project_id: 'web-app-demo-prod'
@@ -176,6 +177,7 @@ jobs:
           workload_identity_provider: ${{ vars.WORKLOAD_IDENTITY_PROVIDER }}
           service_account: ${{ vars.SERVICE_ACCOUNT }}
           google_oauth_client_id: ${{ steps.secrets.outputs.GOOGLE_OAUTH_CLIENT_ID }}
+          identity_platform_api_key: ${{ steps.secrets.outputs.IDENTITY_PLATFORM_API_KEY }}
 
   frontend-dev:
     needs: [diff, infrastructure-dev, backend-dev]
@@ -200,6 +202,7 @@ jobs:
           service_account: ${{ vars.SERVICE_ACCOUNT }}
           secrets_list: |
             GOOGLE_OAUTH_CLIENT_ID=google_oauth_client_id
+            IDENTITY_PLATFORM_API_KEY=identity_platform_api_key
       - uses: ./.github/actions/frontend-push-commit
         with:
           project_id: 'web-app-demo-dev'
@@ -207,3 +210,4 @@ jobs:
           workload_identity_provider: ${{ vars.WORKLOAD_IDENTITY_PROVIDER }}
           service_account: ${{ vars.SERVICE_ACCOUNT }}
           google_oauth_client_id: ${{ steps.secrets.outputs.GOOGLE_OAUTH_CLIENT_ID }}
+          identity_platform_api_key: ${{ steps.secrets.outputs.IDENTITY_PLATFORM_API_KEY }}

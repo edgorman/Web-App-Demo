@@ -66,8 +66,8 @@ jobs:
           workload_identity_provider: ${{ vars.WORKLOAD_IDENTITY_PROVIDER }}
           service_account: ${{ vars.SERVICE_ACCOUNT }}
           secrets_list: |
-            TF_VAR_identity_platform_providers__google_com__client_id=google_oauth_client_id
-            TF_VAR_identity_platform_providers__google_com__client_secret=google_oauth_client_secret
+            TF_VAR_google_oauth_client_id=google_oauth_client_id
+            TF_VAR_google_oauth_client_secret=google_oauth_client_secret
       - uses: ./.github/actions/terraform-pull-request
         with:
           terraform_directory: 'infrastructure/env'
@@ -92,8 +92,8 @@ jobs:
           workload_identity_provider: ${{ vars.WORKLOAD_IDENTITY_PROVIDER }}
           service_account: ${{ vars.SERVICE_ACCOUNT }}
           secrets_list: |
-            TF_VAR_identity_platform_providers__google_com__client_id=google_oauth_client_id
-            TF_VAR_identity_platform_providers__google_com__client_secret=google_oauth_client_secret
+            TF_VAR_google_oauth_client_id=google_oauth_client_id
+            TF_VAR_google_oauth_client_secret=google_oauth_client_secret
       - uses: ./.github/actions/terraform-pull-request
         with:
           terraform_directory: 'infrastructure/env'

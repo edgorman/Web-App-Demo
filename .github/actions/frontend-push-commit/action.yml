@@ -21,6 +21,9 @@ inputs:
   google_oauth_client_id:
     description: 'Google OAuth Client ID for Identity Platform'
     required: true
+  identity_platform_api_key:
+    description: 'Identity Platform API Key from Secret Manager'
+    required: true
 
 runs:
   using: "composite"
@@ -34,32 +37,6 @@ runs:
     - name: Set up Cloud SDK
       uses: google-github-actions/setup-gcloud@v2
 
-    - name: Get Identity Platform API Key
-      id: get-api-key
-      shell: bash
-      run: |
-        # Get the Web API key from Identity Platform config
-        API_KEY=$(gcloud alpha identity api-keys list \
-          --project=${{ inputs.project_id }} \
-          --filter="displayName:Browser key (auto created by Identity Platform)" \
-          --format="value(name)" \
-          --limit=1 2>/dev/null || echo "")
-        
-        if [ -z "$API_KEY" ]; then
-          echo "Error: Could not find Identity Platform API key"
-          exit 1
-        fi
-        
-        # Extract just the key ID from the full resource name
-        KEY_VALUE=$(gcloud alpha identity api-keys get-key-string $API_KEY --format="value(keyString)" 2>/dev/null || echo "")
-        
-        if [ -z "$KEY_VALUE" ]; then
-          echo "Error: Could not retrieve API key string"
-          exit 1
-        fi
-        
-        echo "api_key=$KEY_VALUE" >> $GITHUB_OUTPUT
-
     - name: Get Backend Service URL
       id: get-backend-url
       shell: bash
@@ -70,44 +47,37 @@ runs:
           --format="value(status.url)" 2>/dev/null || echo "")
         
         if [ -z "$BACKEND_URL" ]; then
-          echo "backend_url=" >> $GITHUB_OUTPUT
-        else
-          echo "backend_url=$BACKEND_URL" >> $GITHUB_OUTPUT
+          echo "Error: Could not find backend service URL"
+          exit 1
         fi
+        
+        echo "backend_url=$BACKEND_URL" >> $GITHUB_OUTPUT
+
+    - name: Create .env file
+      shell: bash
+      working-directory: services/frontend
+      run: |
+        cat > .env <<EOF
+        ENV_PROJECT_ID=${{ inputs.project_id }}
+        ENV_API_KEY=${{ inputs.identity_platform_api_key }}
+        ENV_CLIENT_ID=${{ inputs.google_oauth_client_id }}
+        ENV_BACKEND_URL=${{ steps.get-backend-url.outputs.backend_url }}
+        EOF
 
     - name: Configure Docker for Artifact Registry
       shell: bash
       run: |
         gcloud auth configure-docker ${{ inputs.region }}-docker.pkg.dev
 
-    - name: Build Docker image with environment variables
+    - name: Build Docker image
       shell: bash
       working-directory: services/frontend
       env:
         BUILDX_NO_DEFAULT_ATTESTATIONS: 1
       run: |
-        # Create env.js file with environment variables
-        cat > env.js <<EOF
-        window.ENV_PROJECT_ID = '${{ inputs.project_id }}';
-        window.ENV_API_KEY = '${{ steps.get-api-key.outputs.api_key }}';
-        window.ENV_CLIENT_ID = '${{ inputs.google_oauth_client_id }}';
-        window.ENV_BACKEND_URL = '${{ steps.get-backend-url.outputs.backend_url }}';
-        EOF
-        
-        # Create Dockerfile with env.js injection
-        cat > Dockerfile.build <<EOF
-        FROM nginx:alpine
-        COPY env.js /usr/share/nginx/html/env.js
-        COPY oauth-login.html /usr/share/nginx/html/index.html
-        COPY nginx.conf /etc/nginx/conf.d/default.conf
-        EXPOSE 8080
-        CMD ["nginx", "-g", "daemon off;"]
-        EOF
-        
-        # Build and tag image
-        docker build -f Dockerfile.build \
-          -t ${{ inputs.region }}-docker.pkg.dev/${{ inputs.project_id }}/frontend/frontend:${{ github.sha }} \
-          -t ${{ inputs.region }}-docker.pkg.dev/${{ inputs.project_id }}/frontend/frontend:latest .
+        # Build and tag image for the frontend repository in Artifact Registry
+        docker build -t ${{ inputs.region }}-docker.pkg.dev/${{ inputs.project_id }}/frontend/frontend:${{ github.sha }} \
+                     -t ${{ inputs.region }}-docker.pkg.dev/${{ inputs.project_id }}/frontend/frontend:latest .
 
     - name: Push Docker image
       shell: bash

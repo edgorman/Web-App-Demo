@@ -15,15 +15,55 @@ resource "google_identity_platform_config" "default" {
   )
 }
 
-resource "google_identity_platform_default_supported_idp_config" "providers" {
-  for_each = var.identity_platform_providers
-
+resource "google_identity_platform_default_supported_idp_config" "google" {
   depends_on = [google_identity_platform_config.default]
 
   project = var.project_id
-  idp_id  = each.key
-  enabled = each.value.enabled
+  idp_id  = "google.com"
+  enabled = true
 
-  client_id     = each.value.client_id
-  client_secret = each.value.client_secret
+  client_id     = var.google_oauth_client_id
+  client_secret = var.google_oauth_client_secret
+}
+
+# Store OAuth credentials in Secret Manager for GitHub Actions
+resource "google_secret_manager_secret" "google_oauth_client_id" {
+  project   = var.project_id
+  secret_id = "google_oauth_client_id"
+
+  replication {
+    auto {}
+  }
+}
+
+resource "google_secret_manager_secret_version" "google_oauth_client_id_v1" {
+  secret      = google_secret_manager_secret.google_oauth_client_id.id
+  secret_data = var.google_oauth_client_id
+}
+
+resource "google_secret_manager_secret" "google_oauth_client_secret" {
+  project   = var.project_id
+  secret_id = "google_oauth_client_secret"
+
+  replication {
+    auto {}
+  }
+}
+
+resource "google_secret_manager_secret_version" "google_oauth_client_secret_v1" {
+  secret      = google_secret_manager_secret.google_oauth_client_secret.id
+  secret_data = var.google_oauth_client_secret
+}
+
+# Store Identity Platform API key in Secret Manager
+# This will be populated after Identity Platform creates the API key
+resource "google_secret_manager_secret" "identity_platform_api_key" {
+  project   = var.project_id
+  secret_id = "identity_platform_api_key"
+
+  replication {
+    auto {}
+  }
+
+  depends_on = [google_identity_platform_config.default]
 }
