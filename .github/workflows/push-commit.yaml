@@ -165,16 +165,19 @@ jobs:
           service_account: ${{ vars.SERVICE_ACCOUNT }}
           secrets_list: ""
       - id: backend-url
-        uses: ./.github/actions/gcp-get-cloud-run-url
+        uses: ./.github/actions/get-service-url
         with:
           project_id: 'web-app-demo-prod'
           region: 'europe-west1'
           service_name: 'backend'
-      - uses: ./.github/actions/frontend-push-commit
+      - uses: ./.github/actions/service-push-commit
         with:
           project_id: 'web-app-demo-prod'
           region: 'europe-west1'
-          backend_url: ${{ steps.backend-url.outputs.url }}
+          service_name: 'frontend'
+          service_directory: 'services/frontend'
+          repository_name: 'frontend'
+          docker_build_args: 'VITE_BACKEND_URL=${{ steps.backend-url.outputs.url }}'
           workload_identity_provider: ${{ vars.WORKLOAD_IDENTITY_PROVIDER }}
           service_account: ${{ vars.SERVICE_ACCOUNT }}
 
@@ -201,15 +204,18 @@ jobs:
           service_account: ${{ vars.SERVICE_ACCOUNT }}
           secrets_list: ""
       - id: backend-url
-        uses: ./.github/actions/gcp-get-cloud-run-url
+        uses: ./.github/actions/get-service-url
         with:
           project_id: 'web-app-demo-dev'
           region: 'europe-west1'
           service_name: 'backend'
-      - uses: ./.github/actions/frontend-push-commit
+      - uses: ./.github/actions/service-push-commit
         with:
           project_id: 'web-app-demo-dev'
           region: 'europe-west1'
-          backend_url: ${{ steps.backend-url.outputs.url }}
+          service_name: 'frontend'
+          service_directory: 'services/frontend'
+          repository_name: 'frontend'
+          docker_build_args: 'VITE_BACKEND_URL=${{ steps.backend-url.outputs.url }}'
           workload_identity_provider: ${{ vars.WORKLOAD_IDENTITY_PROVIDER }}
           service_account: ${{ vars.SERVICE_ACCOUNT }}

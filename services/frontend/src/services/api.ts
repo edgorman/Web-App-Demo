@@ -12,7 +12,7 @@ import { ApiResponse } from '../types/models'
 export async function fetchFromBackend<T>(
   endpoint: string
 ): Promise<ApiResponse<T>> {
-  const url = `${config.apiUrl}${endpoint}`
+  const url = `${config.backendUrl}${endpoint}`
 
   try {
     const response = await fetch(url)

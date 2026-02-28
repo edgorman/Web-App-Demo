@@ -23,6 +23,10 @@ inputs:
   service_account:
     description: 'The Google Service Account email'
     required: true
+  docker_build_args:
+    description: 'Additional Docker build arguments (space-separated, e.g., "ARG1=value1 ARG2=value2")'
+    required: false
+    default: ''
 
 runs:
   using: "composite"
@@ -47,8 +51,17 @@ runs:
       env:
         BUILDX_NO_DEFAULT_ATTESTATIONS: 1
       run: |
+        # Prepare build args
+        BUILD_ARGS=""
+        if [ -n "${{ inputs.docker_build_args }}" ]; then
+          for arg in ${{ inputs.docker_build_args }}; do
+            BUILD_ARGS="$BUILD_ARGS --build-arg $arg"
+          done
+        fi
+        
         # Build and tag image for the repository in Artifact Registry
-        docker build -t ${{ inputs.region }}-docker.pkg.dev/${{ inputs.project_id }}/${{ inputs.repository_name }}/${{ inputs.service_name }}:${{ github.sha }} \
+        docker build $BUILD_ARGS \
+                     -t ${{ inputs.region }}-docker.pkg.dev/${{ inputs.project_id }}/${{ inputs.repository_name }}/${{ inputs.service_name }}:${{ github.sha }} \
                      -t ${{ inputs.region }}-docker.pkg.dev/${{ inputs.project_id }}/${{ inputs.repository_name }}/${{ inputs.service_name }}:latest .
 
     - name: Push Docker image
