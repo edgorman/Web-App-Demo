@@ -1,5 +1,5 @@
-name: 'Backend Push Commit'
-description: 'Builds and deploys the backend service to Cloud Run'
+name: 'Frontend Push Commit'
+description: 'Builds and deploys the frontend service to Cloud Run'
 
 inputs:
   project_id:
@@ -11,7 +11,7 @@ inputs:
   service_name:
     description: 'Cloud Run service name'
     required: false
-    default: 'backend'
+    default: 'frontend'
   workload_identity_provider:
     description: 'The Workload Identity Provider resource name'
     required: true
@@ -27,7 +27,7 @@ runs:
         project_id: ${{ inputs.project_id }}
         region: ${{ inputs.region }}
         service_name: ${{ inputs.service_name }}
-        service_directory: 'services/backend'
-        repository_name: 'backend'
+        service_directory: 'services/frontend'
+        repository_name: 'frontend'
         workload_identity_provider: ${{ inputs.workload_identity_provider }}
         service_account: ${{ inputs.service_account }}

@@ -50,3 +50,45 @@ variable "backend_max_instances" {
   type        = number
   default     = 10
 }
+
+variable "frontend_image" {
+  description = "The container image for the frontend service"
+  type        = string
+  default     = "us-docker.pkg.dev/cloudrun/container/hello"
+}
+
+variable "frontend_service_name" {
+  description = "The name of the frontend Cloud Run service"
+  type        = string
+  default     = "frontend"
+}
+
+variable "frontend_port" {
+  description = "The port the frontend container listens on"
+  type        = number
+  default     = 8080
+}
+
+variable "frontend_cpu" {
+  description = "CPU allocation for the frontend service (e.g., '1', '2', '4')"
+  type        = string
+  default     = "1"
+}
+
+variable "frontend_memory" {
+  description = "Memory allocation for the frontend service (e.g., '512Mi', '1Gi', '2Gi')"
+  type        = string
+  default     = "512Mi"
+}
+
+variable "frontend_min_instances" {
+  description = "Minimum number of instances for the frontend service (0 for cost savings, 1+ to avoid cold starts)"
+  type        = number
+  default     = 0
+}
+
+variable "frontend_max_instances" {
+  description = "Maximum number of instances for the frontend service"
+  type        = number
+  default     = 10
+}
