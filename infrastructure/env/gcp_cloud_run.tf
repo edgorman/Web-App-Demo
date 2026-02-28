@@ -6,6 +6,8 @@ resource "google_cloud_run_v2_service" "backend" {
   project  = var.project_id
 
   template {
+    service_account = google_service_account.backend.email
+
     containers {
       image = var.backend_image
 
@@ -60,6 +62,8 @@ resource "google_cloud_run_v2_service" "frontend" {
   project  = var.project_id
 
   template {
+    service_account = google_service_account.frontend.email
+
     containers {
       image = var.frontend_image
 

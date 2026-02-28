@@ -35,8 +35,9 @@ The backend service is configured with public access (`allUsers` invoker role) f
 ### Terraform Configuration
 Located in `infrastructure/env/`:
 - `gcp_cloud_run.tf` - Cloud Run service and IAM configuration
+- `gcp_service_account.tf` - Custom service account for the backend service
 - `variables.tf` - Input variables
-- `outputs.tf` - Service URL and name outputs
+- `outputs.tf` - Service URL, name, and service account outputs
 - `providers.tf` - Provider configuration
 
 ### Environment Configuration
@@ -176,7 +177,14 @@ Development environment with min_instances=0 only incurs costs during active use
 ### Current Configuration
 - ✅ Container runs as non-root user (configured in Dockerfile)
 - ✅ HTTPS enforced (automatic with Cloud Run)
+- ✅ Custom service account with minimal permissions (follows GCP best practices)
 - ⚠️ Public access enabled for demo purposes
+
+### Service Account
+The backend service uses a dedicated custom service account (`backend-sa`) instead of the default Compute Engine service account. This follows the principle of least privilege and GCP security best practices:
+- No additional IAM role bindings are required as the backend is a stateless FastAPI application
+- The service account is used solely to run the Cloud Run service
+- This eliminates security warnings about using the default service account with broad IAM permissions
 
 ### Production Recommendations
 1. Implement authentication at the application or infrastructure level
