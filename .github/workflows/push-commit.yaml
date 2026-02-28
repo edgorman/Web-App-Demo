@@ -143,43 +143,79 @@ jobs:
           service_account: ${{ vars.SERVICE_ACCOUNT }}
 
   frontend-prod:
-    needs: [diff, infrastructure-prod]
+    needs: [diff, infrastructure-prod, backend-prod]
     if: |
       always() &&
       needs.diff.result == 'success' &&
       needs.diff.outputs.service-frontend == 'true' &&
       github.ref_name == 'main' &&
-      (needs.infrastructure-prod.result == 'success' || needs.infrastructure-prod.result == 'skipped')
+      (needs.infrastructure-prod.result == 'success' || needs.infrastructure-prod.result == 'skipped') &&
+      (needs.backend-prod.result == 'success' || needs.backend-prod.result == 'skipped')
     runs-on: ubuntu-latest
     permissions:
       contents: read
       id-token: write
     steps:
       - uses: actions/checkout@v5
-      - uses: ./.github/actions/frontend-push-commit
+      - id: secrets
+        uses: ./.github/actions/gcp-secret-manager
+        with:
+          project_id: 'web-app-demo-prod'
+          workload_identity_provider: ${{ vars.WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: ${{ vars.SERVICE_ACCOUNT }}
+          secrets_list: ""
+      - id: backend-url
+        uses: ./.github/actions/get-service-url
         with:
           project_id: 'web-app-demo-prod'
           region: 'europe-west1'
+          service_name: 'backend'
+      - uses: ./.github/actions/service-push-commit
+        with:
+          project_id: 'web-app-demo-prod'
+          region: 'europe-west1'
+          service_name: 'frontend'
+          service_directory: 'services/frontend'
+          repository_name: 'frontend'
+          docker_build_args: 'VITE_BACKEND_URL=${{ steps.backend-url.outputs.url }}'
           workload_identity_provider: ${{ vars.WORKLOAD_IDENTITY_PROVIDER }}
           service_account: ${{ vars.SERVICE_ACCOUNT }}
 
   frontend-dev:
-    needs: [diff, infrastructure-dev]
+    needs: [diff, infrastructure-dev, backend-dev]
     if: |
       always() &&
       needs.diff.result == 'success' &&
       needs.diff.outputs.service-frontend == 'true' &&
       github.ref_name == 'develop' &&
-      (needs.infrastructure-dev.result == 'success' || needs.infrastructure-dev.result == 'skipped')
+      (needs.infrastructure-dev.result == 'success' || needs.infrastructure-dev.result == 'skipped') &&
+      (needs.backend-dev.result == 'success' || needs.backend-dev.result == 'skipped')
     runs-on: ubuntu-latest
     permissions:
       contents: read
       id-token: write
     steps:
       - uses: actions/checkout@v5
-      - uses: ./.github/actions/frontend-push-commit
+      - id: secrets
+        uses: ./.github/actions/gcp-secret-manager
+        with:
+          project_id: 'web-app-demo-dev'
+          workload_identity_provider: ${{ vars.WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: ${{ vars.SERVICE_ACCOUNT }}
+          secrets_list: ""
+      - id: backend-url
+        uses: ./.github/actions/get-service-url
         with:
           project_id: 'web-app-demo-dev'
           region: 'europe-west1'
+          service_name: 'backend'
+      - uses: ./.github/actions/service-push-commit
+        with:
+          project_id: 'web-app-demo-dev'
+          region: 'europe-west1'
+          service_name: 'frontend'
+          service_directory: 'services/frontend'
+          repository_name: 'frontend'
+          docker_build_args: 'VITE_BACKEND_URL=${{ steps.backend-url.outputs.url }}'
           workload_identity_provider: ${{ vars.WORKLOAD_IDENTITY_PROVIDER }}
           service_account: ${{ vars.SERVICE_ACCOUNT }}

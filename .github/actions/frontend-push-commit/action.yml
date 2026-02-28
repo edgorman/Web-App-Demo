@@ -12,6 +12,9 @@ inputs:
     description: 'Cloud Run service name'
     required: false
     default: 'frontend'
+  backend_url:
+    description: 'Backend service URL'
+    required: true
   workload_identity_provider:
     description: 'The Workload Identity Provider resource name'
     required: true
@@ -22,12 +25,14 @@ inputs:
 runs:
   using: "composite"
   steps:
-    - uses: ./.github/actions/service-push-commit
+    - name: Deploy frontend service
+      uses: ./.github/actions/service-push-commit
       with:
         project_id: ${{ inputs.project_id }}
         region: ${{ inputs.region }}
         service_name: ${{ inputs.service_name }}
         service_directory: 'services/frontend'
         repository_name: 'frontend'
+        docker_build_args: 'VITE_BACKEND_URL=${{ inputs.backend_url }}'
         workload_identity_provider: ${{ inputs.workload_identity_provider }}
         service_account: ${{ inputs.service_account }}
