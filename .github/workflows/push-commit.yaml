@@ -157,10 +157,24 @@ jobs:
       id-token: write
     steps:
       - uses: actions/checkout@v5
+      - id: secrets
+        uses: ./.github/actions/gcp-secret-manager
+        with:
+          project_id: 'web-app-demo-prod'
+          workload_identity_provider: ${{ vars.WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: ${{ vars.SERVICE_ACCOUNT }}
+          secrets_list: ""
+      - id: backend-url
+        uses: ./.github/actions/gcp-get-cloud-run-url
+        with:
+          project_id: 'web-app-demo-prod'
+          region: 'europe-west1'
+          service_name: 'backend'
       - uses: ./.github/actions/frontend-push-commit
         with:
           project_id: 'web-app-demo-prod'
           region: 'europe-west1'
+          backend_url: ${{ steps.backend-url.outputs.url }}
           workload_identity_provider: ${{ vars.WORKLOAD_IDENTITY_PROVIDER }}
           service_account: ${{ vars.SERVICE_ACCOUNT }}
 
@@ -179,9 +193,23 @@ jobs:
       id-token: write
     steps:
       - uses: actions/checkout@v5
+      - id: secrets
+        uses: ./.github/actions/gcp-secret-manager
+        with:
+          project_id: 'web-app-demo-dev'
+          workload_identity_provider: ${{ vars.WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: ${{ vars.SERVICE_ACCOUNT }}
+          secrets_list: ""
+      - id: backend-url
+        uses: ./.github/actions/gcp-get-cloud-run-url
+        with:
+          project_id: 'web-app-demo-dev'
+          region: 'europe-west1'
+          service_name: 'backend'
       - uses: ./.github/actions/frontend-push-commit
         with:
           project_id: 'web-app-demo-dev'
           region: 'europe-west1'
+          backend_url: ${{ steps.backend-url.outputs.url }}
           workload_identity_provider: ${{ vars.WORKLOAD_IDENTITY_PROVIDER }}
           service_account: ${{ vars.SERVICE_ACCOUNT }}

@@ -12,10 +12,9 @@ inputs:
     description: 'Cloud Run service name'
     required: false
     default: 'frontend'
-  backend_service_name:
-    description: 'Backend Cloud Run service name'
-    required: false
-    default: 'backend'
+  backend_url:
+    description: 'Backend service URL'
+    required: true
   workload_identity_provider:
     description: 'The Workload Identity Provider resource name'
     required: true
@@ -35,37 +34,6 @@ runs:
     - name: Set up Cloud SDK
       uses: google-github-actions/setup-gcloud@v2
 
-    - name: Get backend service URL
-      id: backend-url
-      shell: bash
-      run: |
-        BACKEND_SERVICE="${{ inputs.backend_service_name }}"
-        REGION="${{ inputs.region }}"
-        PROJECT="${{ inputs.project_id }}"
-        
-        # Check if backend service exists
-        if ! gcloud run services describe "$BACKEND_SERVICE" \
-          --region="$REGION" \
-          --project="$PROJECT" \
-          --format='value(metadata.name)' > /dev/null 2>&1; then
-          echo "Error: Backend service '$BACKEND_SERVICE' not found in region '$REGION' for project '$PROJECT'"
-          echo "Please ensure the backend service is deployed before deploying the frontend."
-          exit 1
-        fi
-        
-        BACKEND_URL=$(gcloud run services describe "$BACKEND_SERVICE" \
-          --region="$REGION" \
-          --project="$PROJECT" \
-          --format='value(status.url)')
-        
-        if [ -z "$BACKEND_URL" ]; then
-          echo "Error: Failed to retrieve backend service URL"
-          exit 1
-        fi
-        
-        echo "url=${BACKEND_URL}" >> $GITHUB_OUTPUT
-        echo "Backend URL: ${BACKEND_URL}"
-
     - name: Configure Docker for Artifact Registry
       shell: bash
       run: |
@@ -79,7 +47,7 @@ runs:
       run: |
         # Build and tag image for the repository in Artifact Registry
         docker build \
-          --build-arg VITE_API_URL=${{ steps.backend-url.outputs.url }} \
+          --build-arg VITE_API_URL=${{ inputs.backend_url }} \
           -t ${{ inputs.region }}-docker.pkg.dev/${{ inputs.project_id }}/frontend/${{ inputs.service_name }}:${{ github.sha }} \
           -t ${{ inputs.region }}-docker.pkg.dev/${{ inputs.project_id }}/frontend/${{ inputs.service_name }}:latest .
 
