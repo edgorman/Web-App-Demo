@@ -14,11 +14,21 @@ export async function fetchFromBackend<T>(
 ): Promise<ApiResponse<T>> {
   const url = `${config.apiUrl}${endpoint}`
 
-  const response = await fetch(url)
+  try {
+    const response = await fetch(url)
 
-  if (!response.ok) {
-    throw new Error(`API request failed: ${response.status} ${response.statusText}`)
+    if (!response.ok) {
+      const errorBody = await response.text().catch(() => 'No error details')
+      throw new Error(
+        `API request failed: ${response.status} ${response.statusText} - URL: ${url} - ${errorBody}`
+      )
+    }
+
+    return response.json()
+  } catch (error) {
+    if (error instanceof Error) {
+      throw error
+    }
+    throw new Error(`Failed to fetch from ${url}: ${String(error)}`)
   }
-
-  return response.json()
 }
