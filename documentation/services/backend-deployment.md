@@ -25,10 +25,14 @@ The backend service is a FastAPI application deployed to Google Cloud Run. It's 
   - Prod: 10
 
 ### Access Control
-The backend service is configured with public access (`allUsers` invoker role) for demo purposes. For production deployments with sensitive data, consider implementing:
-- Cloud Run's built-in authentication
-- API Gateway with API keys
-- Application-level authentication (OAuth, JWT, etc.)
+The backend service uses a restricted access control model:
+- **Frontend Service Account**: The frontend Cloud Run service's service account has permission to invoke the backend service
+- **Organization Developers**: Developers in the configured Google Workspace domain can access the backend for testing and debugging
+- **Public Access**: Not allowed - the backend is not publicly accessible
+
+This security model ensures the backend API is only accessible through the frontend application or by authenticated developers in the organization.
+
+To configure developer access, set the `developers_domain` variable in your environment's `terraform.tfvars` file (e.g., `mycompany.com`).
 
 ## Infrastructure Files
 
@@ -100,6 +104,7 @@ When backend service files are changed and pushed:
 - `project_id` - GCP project ID for the environment
 - `region` - GCP region for Cloud Run service
 - `backend_image` - Full container image path
+- `developers_domain` - Google Workspace domain for developer access (e.g., "mycompany.com")
 
 ### Optional Variables
 - `backend_service_name` - Name of the Cloud Run service (default: "backend")
@@ -108,6 +113,10 @@ When backend service files are changed and pushed:
 
 ## Accessing the Service
 
+The backend service is only accessible to:
+1. **Frontend service**: The frontend Cloud Run service can invoke the backend using its service account
+2. **Organization developers**: Users authenticated with Google accounts in the configured domain
+
 After deployment, the service URL is available as a Terraform output:
 
 ```bash
@@ -115,6 +124,19 @@ terraform output backend_service_url
 ```
 
 The URL will be in the format: `https://backend-<hash>-<region>.run.app`
+
+To access the backend as a developer, you must authenticate using `gcloud`:
+
+```bash
+# Authenticate with your organization account
+gcloud auth login
+
+# Get an ID token
+TOKEN=$(gcloud auth print-identity-token)
+
+# Make a request to the backend
+curl -H "Authorization: Bearer $TOKEN" https://backend-<hash>-<region>.run.app
+```
 
 ## Monitoring and Logs
 
@@ -164,7 +186,9 @@ Development environment with min_instances=0 only incurs costs during active use
 - Ensure the container listens on port 8000
 
 **Issue: 403 Forbidden**
-- Verify the IAM policy allows public access
+- Verify you are authenticated with a Google account in the authorized domain
+- For developers: Use `gcloud auth login` and include the ID token in your requests
+- For the frontend service: Ensure the service account has the `roles/run.invoker` role
 - Check that the service is deployed and healthy
 
 **Issue: Cold starts taking too long**
@@ -178,7 +202,8 @@ Development environment with min_instances=0 only incurs costs during active use
 - ✅ Container runs as non-root user (configured in Dockerfile)
 - ✅ HTTPS enforced (automatic with Cloud Run)
 - ✅ Custom service account with minimal permissions (follows GCP best practices)
-- ⚠️ Public access enabled for demo purposes
+- ✅ Restricted access - only accessible by frontend service and organization developers
+- ✅ Cloud Run IAM for service-to-service authentication
 
 ### Service Account
 The backend service uses a dedicated custom service account (`backend-sa`) instead of the default Compute Engine service account. This follows the principle of least privilege and GCP security best practices:
@@ -187,8 +212,8 @@ The backend service uses a dedicated custom service account (`backend-sa`) inste
 - This eliminates security warnings about using the default service account with broad IAM permissions
 
 ### Production Recommendations
-1. Implement authentication at the application or infrastructure level
-2. Use Cloud Armor for DDoS protection
-3. Enable VPC egress controls if accessing internal services
-4. Implement rate limiting
-5. Use Cloud Run IAM for service-to-service authentication
+1. Use Cloud Armor for DDoS protection
+2. Enable VPC egress controls if accessing internal services
+3. Implement rate limiting at the application level
+4. Monitor and alert on suspicious access patterns
+5. Regularly review and audit IAM permissions

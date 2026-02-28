@@ -23,11 +23,22 @@ Services and APIs are managed via a consolidated `all_projects` local in Terrafo
 
 ## Application Infrastructure
 The `infrastructure/env/` directory contains environment-specific resources:
-- **Cloud Run Services**: Serverless container deployments for the backend and other services
-- **Service IAM Policies**: Access control for individual service invocation (e.g., making services publicly accessible)
+- **Cloud Run Services**: Serverless container deployments for the backend and frontend services
+- **Service IAM Policies**: Access control for individual service invocation
 - **Configuration**: Environment-specific variables and scaling settings
 
 Note: Project-level IAM permissions for the GitHub Actions service account are managed centrally in the root project (`infrastructure/root/gcp_env_iam.tf`).
+
+### Access Control Model
+
+The infrastructure implements a secure access control model for Cloud Run services:
+
+- **Frontend Service**: Publicly accessible (`allUsers` has `roles/run.invoker`)
+- **Backend Service**: Restricted access only to:
+  - Frontend service account (for service-to-service communication)
+  - Developers in the organization's Google Workspace domain (for testing/debugging)
+
+This ensures the backend API is not publicly accessible and can only be invoked by authorized entities. The `developers_domain` variable must be configured in `terraform.tfvars` for each environment.
 
 See [Backend Service Deployment](../services/backend-deployment.md) for details on the backend Cloud Run service.
 
