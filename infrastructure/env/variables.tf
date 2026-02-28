@@ -96,4 +96,9 @@ variable "frontend_max_instances" {
 variable "developers_domain" {
   description = "Domain for developers who can access the backend service (e.g., 'example.com')"
   type        = string
+
+  validation {
+    condition     = var.developers_domain != "example.com"
+    error_message = "The developers_domain must be set to your organization's Google Workspace domain. The placeholder value 'example.com' is not allowed."
+  }
 }
