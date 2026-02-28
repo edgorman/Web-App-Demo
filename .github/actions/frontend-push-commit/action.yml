@@ -39,19 +39,23 @@ runs:
       id: backend-url
       shell: bash
       run: |
+        BACKEND_SERVICE="${{ inputs.backend_service_name }}"
+        REGION="${{ inputs.region }}"
+        PROJECT="${{ inputs.project_id }}"
+        
         # Check if backend service exists
-        if ! gcloud run services describe ${{ inputs.backend_service_name }} \
-          --region=${{ inputs.region }} \
-          --project=${{ inputs.project_id }} \
+        if ! gcloud run services describe "$BACKEND_SERVICE" \
+          --region="$REGION" \
+          --project="$PROJECT" \
           --format='value(metadata.name)' > /dev/null 2>&1; then
-          echo "Error: Backend service '${{ inputs.backend_service_name }}' not found in region '${{ inputs.region }}' for project '${{ inputs.project_id }}'"
+          echo "Error: Backend service '$BACKEND_SERVICE' not found in region '$REGION' for project '$PROJECT'"
           echo "Please ensure the backend service is deployed before deploying the frontend."
           exit 1
         fi
         
-        BACKEND_URL=$(gcloud run services describe ${{ inputs.backend_service_name }} \
-          --region=${{ inputs.region }} \
-          --project=${{ inputs.project_id }} \
+        BACKEND_URL=$(gcloud run services describe "$BACKEND_SERVICE" \
+          --region="$REGION" \
+          --project="$PROJECT" \
           --format='value(status.url)')
         
         if [ -z "$BACKEND_URL" ]; then

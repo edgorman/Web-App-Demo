@@ -24,7 +24,13 @@ export async function fetchFromBackend<T>(
       )
     }
 
-    return response.json()
+    try {
+      return await response.json()
+    } catch (jsonError) {
+      throw new Error(
+        `Failed to parse JSON response from ${url}: ${jsonError instanceof Error ? jsonError.message : String(jsonError)}`
+      )
+    }
   } catch (error) {
     if (error instanceof Error) {
       throw error
