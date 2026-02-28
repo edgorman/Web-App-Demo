@@ -25,10 +25,11 @@ The backend service is a FastAPI application deployed to Google Cloud Run. It's 
   - Prod: 10
 
 ### Access Control
-The backend service is configured with public access (`allUsers` invoker role) for demo purposes. For production deployments with sensitive data, consider implementing:
-- Cloud Run's built-in authentication
-- API Gateway with API keys
-- Application-level authentication (OAuth, JWT, etc.)
+The backend service uses a restricted access control model:
+- **Frontend Service Account**: The frontend Cloud Run service's service account has permission to invoke the backend service
+- **Public Access**: Not allowed - the backend is not publicly accessible
+
+This security model ensures the backend API is only accessible through the frontend application.
 
 ## Infrastructure Files
 
@@ -108,6 +109,8 @@ When backend service files are changed and pushed:
 
 ## Accessing the Service
 
+The backend service is only accessible to the frontend Cloud Run service using its service account.
+
 After deployment, the service URL is available as a Terraform output:
 
 ```bash
@@ -115,6 +118,8 @@ terraform output backend_service_url
 ```
 
 The URL will be in the format: `https://backend-<hash>-<region>.run.app`
+
+The frontend service automatically invokes the backend with proper authentication using its service account identity.
 
 ## Monitoring and Logs
 
@@ -164,8 +169,9 @@ Development environment with min_instances=0 only incurs costs during active use
 - Ensure the container listens on port 8000
 
 **Issue: 403 Forbidden**
-- Verify the IAM policy allows public access
+- Verify the frontend service account has the `roles/run.invoker` role on the backend service
 - Check that the service is deployed and healthy
+- Ensure the IAM policy is correctly configured in Terraform
 
 **Issue: Cold starts taking too long**
 - Consider increasing `backend_min_instances` in tfvars
@@ -178,7 +184,8 @@ Development environment with min_instances=0 only incurs costs during active use
 - ✅ Container runs as non-root user (configured in Dockerfile)
 - ✅ HTTPS enforced (automatic with Cloud Run)
 - ✅ Custom service account with minimal permissions (follows GCP best practices)
-- ⚠️ Public access enabled for demo purposes
+- ✅ Restricted access - only accessible by frontend service
+- ✅ Cloud Run IAM for service-to-service authentication
 
 ### Service Account
 The backend service uses a dedicated custom service account (`backend-sa`) instead of the default Compute Engine service account. This follows the principle of least privilege and GCP security best practices:
@@ -187,8 +194,8 @@ The backend service uses a dedicated custom service account (`backend-sa`) inste
 - This eliminates security warnings about using the default service account with broad IAM permissions
 
 ### Production Recommendations
-1. Implement authentication at the application or infrastructure level
-2. Use Cloud Armor for DDoS protection
-3. Enable VPC egress controls if accessing internal services
-4. Implement rate limiting
-5. Use Cloud Run IAM for service-to-service authentication
+1. Use Cloud Armor for DDoS protection
+2. Enable VPC egress controls if accessing internal services
+3. Implement rate limiting at the application level
+4. Monitor and alert on suspicious access patterns
+5. Regularly review and audit IAM permissions
