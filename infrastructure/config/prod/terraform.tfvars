@@ -12,4 +12,3 @@ frontend_cpu            = "1"     # Minimum CPU required by Cloud Run V2
 frontend_memory         = "512Mi" # More memory for production workloads
 frontend_min_instances  = 0       # Allow scaling to zero to minimize costs
 frontend_max_instances  = 10
-developers_domain       = "example.com" # Update this with your organization's Google Workspace domain

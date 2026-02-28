@@ -34,11 +34,9 @@ Note: Project-level IAM permissions for the GitHub Actions service account are m
 The infrastructure implements a secure access control model for Cloud Run services:
 
 - **Frontend Service**: Publicly accessible (`allUsers` has `roles/run.invoker`)
-- **Backend Service**: Restricted access only to:
-  - Frontend service account (for service-to-service communication)
-  - Developers in the organization's Google Workspace domain (for testing/debugging)
+- **Backend Service**: Restricted access only to the frontend service account (for service-to-service communication)
 
-This ensures the backend API is not publicly accessible and can only be invoked by authorized entities. The `developers_domain` variable must be configured in `terraform.tfvars` for each environment.
+This ensures the backend API is not publicly accessible and can only be invoked by the frontend service.
 
 See [Backend Service Deployment](../services/backend-deployment.md) for details on the backend Cloud Run service.
 

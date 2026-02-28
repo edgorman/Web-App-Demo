@@ -30,7 +30,6 @@ Update the following files in the repository to match your environment:
     - `github_repository_owner`: Your GitHub username or organization.
     - `github_repository_name`: Your repository name.
 - **`infrastructure/config/root/terraform.tfvars`**: Alternatively, define these values here to keep code generic.
-- **`infrastructure/config/dev/terraform.tfvars`** and **`infrastructure/config/prod/terraform.tfvars`**: Update the `developers_domain` variable with your organization's Google Workspace domain (e.g., `mycompany.com`). This grants developers in your organization access to invoke the backend Cloud Run service for testing and debugging purposes.
 
 ## 5. Bootstrap Infrastructure
 Run the initial deployment from your local machine to set up the foundation:
