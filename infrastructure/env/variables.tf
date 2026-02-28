@@ -92,3 +92,8 @@ variable "frontend_max_instances" {
   type        = number
   default     = 10
 }
+
+variable "developers_domain" {
+  description = "Domain for developers who can access the backend service (e.g., 'example.com')"
+  type        = string
+}
