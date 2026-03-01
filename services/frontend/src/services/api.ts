@@ -20,7 +20,7 @@ export async function fetchFromBackend<T>(
     if (!response.ok) {
       const errorBody = await response.text().catch(() => 'No error details')
       throw new Error(
-        `API request failed: ${response.status} ${response.statusText} - URL: ${url} - ${errorBody}`
+        `API request failed: ${response.status} ${response.statusText} - URL: ${url} - Response: ${errorBody}`
       )
     }
 
@@ -33,8 +33,12 @@ export async function fetchFromBackend<T>(
     }
   } catch (error) {
     if (error instanceof Error) {
+      // Re-throw errors that already have good messages (like the ones above)
       throw error
     }
-    throw new Error(`Failed to fetch from ${url}: ${String(error)}`)
+    // For network errors or other unexpected errors, provide detailed information
+    throw new Error(
+      `Network error fetching ${url}: ${String(error)}. This could be due to CORS, network connectivity, or the service being unavailable.`
+    )
   }
 }

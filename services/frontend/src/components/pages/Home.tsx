@@ -34,8 +34,27 @@ function Home() {
         <h2>Backend API Response</h2>
         {loading && <p>Loading...</p>}
         {error && (
-          <div style={{ color: 'red' }}>
-            <p>Error: {error}</p>
+          <div
+            style={{
+              color: 'red',
+              backgroundColor: '#ffebee',
+              padding: '1rem',
+              borderRadius: '4px',
+              border: '1px solid #ef5350',
+            }}
+          >
+            <h3 style={{ marginTop: 0 }}>Error Details:</h3>
+            <pre
+              style={{
+                whiteSpace: 'pre-wrap',
+                wordBreak: 'break-word',
+                margin: 0,
+                fontFamily: 'monospace',
+                fontSize: '0.9rem',
+              }}
+            >
+              {error}
+            </pre>
           </div>
         )}
         {data && (
