@@ -55,6 +55,17 @@ resource "google_cloud_run_v2_service_iam_member" "backend_frontend_access" {
   member   = "serviceAccount:${google_service_account.frontend.email}"
 }
 
+# Grant public access to invoke the backend
+resource "google_cloud_run_v2_service_iam_member" "backend_public_access" {
+  depends_on = [google_cloud_run_v2_service.backend]
+
+  name     = google_cloud_run_v2_service.backend.name
+  location = google_cloud_run_v2_service.backend.location
+  project  = google_cloud_run_v2_service.backend.project
+  role     = "roles/run.invoker"
+  member   = "allUsers"
+}
+
 resource "google_cloud_run_v2_service" "frontend" {
   depends_on = [google_project_service.env_services]
 
