@@ -13,6 +13,15 @@ class FastAPIServiceConfig(BaseModel):
     app_version: str = "0.1.0"
 
 
+class CORSConfig(BaseModel):
+    """CORS configuration."""
+
+    allow_origins: list[str] = ["*"]
+    allow_credentials: bool = True
+    allow_methods: list[str] = ["*"]
+    allow_headers: list[str] = ["*"]
+
+
 class ServiceConfig(BaseSettings):
     """Service configuration settings."""
 
@@ -25,3 +34,4 @@ class ServiceConfig(BaseSettings):
     )
 
     fastapi: FastAPIServiceConfig = FastAPIServiceConfig()
+    cors: CORSConfig = CORSConfig()

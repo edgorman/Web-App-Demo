@@ -27,3 +27,24 @@ def test_hello_endpoint(test_client):
     assert "timestamp" in response_data
     assert "success" in response_data
     assert response_data["success"] is True
+
+
+def test_cors_headers(test_client):
+    """Test that CORS headers are set correctly."""
+    # Make an OPTIONS request (preflight request)
+    response = test_client.options(
+        "/",
+        headers={
+            "Origin": "https://example.com",
+            "Access-Control-Request-Method": "GET",
+        },
+    )
+    assert response.status_code == 200
+    assert "access-control-allow-origin" in response.headers
+    assert "access-control-allow-methods" in response.headers
+    assert "access-control-allow-headers" in response.headers
+
+    # Make a regular GET request with Origin header
+    response = test_client.get("/", headers={"Origin": "https://example.com"})
+    assert response.status_code == 200
+    assert "access-control-allow-origin" in response.headers

@@ -1,6 +1,7 @@
 """FastAPI implementation of the API interface."""
 import uvicorn
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 from src.service.api import APIServiceInterface
 from src.service.fastapi.resources.v1 import hello
 from src.config.service import ServiceConfig
@@ -19,6 +20,15 @@ class FastAPIService(APIServiceInterface):
         self.app = FastAPI(
             title=config.fastapi.app_name,
             version=config.fastapi.app_version,
+        )
+
+        # Add CORS middleware
+        self.app.add_middleware(
+            CORSMiddleware,
+            allow_origins=config.cors.allow_origins,
+            allow_credentials=config.cors.allow_credentials,
+            allow_methods=config.cors.allow_methods,
+            allow_headers=config.cors.allow_headers,
         )
 
         # Include routers
