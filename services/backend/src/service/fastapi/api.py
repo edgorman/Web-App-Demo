@@ -25,10 +25,10 @@ class FastAPIService(APIServiceInterface):
         # Add CORS middleware
         self.app.add_middleware(
             CORSMiddleware,
-            allow_origins=config.fastapi.cors_allow_origins,
-            allow_credentials=config.fastapi.cors_allow_credentials,
-            allow_methods=config.fastapi.cors_allow_methods,
-            allow_headers=config.fastapi.cors_allow_headers,
+            allow_origins=config.fastapi.cors.allow_origins,
+            allow_credentials=config.fastapi.cors.allow_credentials,
+            allow_methods=config.fastapi.cors.allow_methods,
+            allow_headers=config.fastapi.cors.allow_headers,
         )
 
         # Include routers with /api/v1 prefix

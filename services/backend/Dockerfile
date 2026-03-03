@@ -21,7 +21,6 @@ FROM python:${PYTHON_VERSION}-slim
 WORKDIR /app
 
 # Set Python version environment variable
-ARG PYTHON_VERSION=3.13
 ENV PYTHON_VERSION=${PYTHON_VERSION}
 
 # Accept frontend URL as build argument
@@ -37,13 +36,12 @@ COPY src ./src
 ENV PATH="/app/.venv/bin:$PATH"
 ENV PYTHONUNBUFFERED=1
 
-# Only set CORS origins if FRONTEND_URL is provided
-RUN if [ -n "$FRONTEND_URL" ]; then \
-      echo "SERVICE__FASTAPI__CORS_ALLOW_ORIGINS=[\"$FRONTEND_URL\"]" > /app/.env; \
-    fi
+# Set CORS origins from build argument
+RUN echo "SERVICE__FASTAPI__CORS__ALLOW_ORIGINS=[\"$FRONTEND_URL\"]" > /app/.env
 
-# Expose port
-EXPOSE 8080
+# Expose port (can be overridden by SERVICE__FASTAPI__PORT env var)
+ARG PORT=8080
+EXPOSE ${PORT}
 
 # Run the application
 CMD ["python", "-m", "src.cli.cli", "run"]
