@@ -11,6 +11,8 @@ class FastAPIServiceConfig(BaseModel):
     reload: bool = False
     app_name: str = "Web-App-Demo Backend"
     app_version: str = "0.1.0"
+    # CORS configuration - empty list by default, must be explicitly configured
+    # Set via SERVICE__FASTAPI__CORS_ALLOW_ORIGINS environment variable
     cors_allow_origins: list[str] = []
     cors_allow_credentials: bool = False
     cors_allow_methods: list[str] = ["*"]
