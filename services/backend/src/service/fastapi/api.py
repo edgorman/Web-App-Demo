@@ -4,31 +4,31 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from src.service.api import APIServiceInterface
 from src.service.fastapi.resources.v1 import hello
-from src.config.service import ServiceConfig
+from src.config.service import FastAPIServiceConfig
 
 
 class FastAPIService(APIServiceInterface):
     """FastAPI implementation of the API interface."""
 
-    def __init__(self, config: ServiceConfig):
+    def __init__(self, config: FastAPIServiceConfig):
         """Initialize FastAPI service.
 
         Args:
-            config: Service configuration
+            config: FastAPI service configuration
         """
         self.config = config
         self.app = FastAPI(
-            title=config.fastapi.app_name,
-            version=config.fastapi.app_version,
+            title=config.app_name,
+            version=config.app_version,
         )
 
         # Add CORS middleware
         self.app.add_middleware(
             CORSMiddleware,
-            allow_origins=config.fastapi.cors.allow_origins,
-            allow_credentials=config.fastapi.cors.allow_credentials,
-            allow_methods=config.fastapi.cors.allow_methods,
-            allow_headers=config.fastapi.cors.allow_headers,
+            allow_origins=config.cors.allow_origins,
+            allow_credentials=config.cors.allow_credentials,
+            allow_methods=config.cors.allow_methods,
+            allow_headers=config.cors.allow_headers,
         )
 
         # Include routers with /api/v1 prefix
@@ -44,7 +44,7 @@ class FastAPIService(APIServiceInterface):
         """
         uvicorn.run(
             self.app,
-            host=host or self.config.fastapi.host,
-            port=port or self.config.fastapi.port,
-            reload=reload if reload is not None else self.config.fastapi.reload,
+            host=host or self.config.host,
+            port=port or self.config.port,
+            reload=reload if reload is not None else self.config.reload,
         )

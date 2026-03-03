@@ -14,7 +14,7 @@ def service_config():
 @pytest.fixture
 def fastapi_service(service_config):
     """Create a FastAPI service instance."""
-    return FastAPIService(service_config)
+    return FastAPIService(service_config.fastapi)
 
 
 @pytest.fixture

@@ -4,8 +4,8 @@ from src.service.fastapi.api import FastAPIService
 
 def test_fastapi_service_initialization(service_config):
     """Test FastAPI service initialization."""
-    service = FastAPIService(service_config)
-    assert service.config == service_config
+    service = FastAPIService(service_config.fastapi)
+    assert service.config == service_config.fastapi
     assert service.app is not None
 
 
