@@ -12,6 +12,10 @@ inputs:
     description: 'Cloud Run service name'
     required: false
     default: 'backend'
+  frontend_url:
+    description: 'Frontend service URL for CORS configuration'
+    required: false
+    default: ''
   workload_identity_provider:
     description: 'The Workload Identity Provider resource name'
     required: true
@@ -29,5 +33,6 @@ runs:
         service_name: ${{ inputs.service_name }}
         service_directory: 'services/backend'
         repository_name: 'backend'
+        docker_build_args: ${{ inputs.frontend_url != '' && format('FRONTEND_URL={0}', inputs.frontend_url) || '' }}
         workload_identity_provider: ${{ inputs.workload_identity_provider }}
         service_account: ${{ inputs.service_account }}

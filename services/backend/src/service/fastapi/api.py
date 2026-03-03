@@ -25,14 +25,14 @@ class FastAPIService(APIServiceInterface):
         # Add CORS middleware
         self.app.add_middleware(
             CORSMiddleware,
-            allow_origins=config.cors.allow_origins,
-            allow_credentials=config.cors.allow_credentials,
-            allow_methods=config.cors.allow_methods,
-            allow_headers=config.cors.allow_headers,
+            allow_origins=config.fastapi.cors_allow_origins,
+            allow_credentials=config.fastapi.cors_allow_credentials,
+            allow_methods=config.fastapi.cors_allow_methods,
+            allow_headers=config.fastapi.cors_allow_headers,
         )
 
-        # Include routers
-        self.app.include_router(hello.router, tags=["hello"])
+        # Include routers with /api/v1 prefix
+        self.app.include_router(hello.router, prefix="/api/v1", tags=["hello"])
 
     def run(self, host: str = None, port: int = None, reload: bool = None):
         """Run the FastAPI server.

@@ -24,6 +24,10 @@ WORKDIR /app
 ARG PYTHON_VERSION=3.13
 ENV PYTHON_VERSION=${PYTHON_VERSION}
 
+# Accept frontend URL as build argument
+ARG FRONTEND_URL
+ENV SERVICE__FASTAPI__CORS_ALLOW_ORIGINS=${FRONTEND_URL:+[\"${FRONTEND_URL}\"]}
+
 # Copy virtual environment from builder
 COPY --from=builder /app/.venv /app/.venv
 

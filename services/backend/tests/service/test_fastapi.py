@@ -19,7 +19,7 @@ def test_fastapi_service_app_properties(fastapi_service):
 
 def test_hello_endpoint(test_client):
     """Test the hello endpoint."""
-    response = test_client.get("/")
+    response = test_client.get("/api/v1/hello")
     assert response.status_code == 200
     response_data = response.json()
     assert "data" in response_data
@@ -33,18 +33,16 @@ def test_cors_headers(test_client):
     """Test that CORS headers are set correctly."""
     # Make an OPTIONS request (preflight request)
     response = test_client.options(
-        "/",
+        "/api/v1/hello",
         headers={
             "Origin": "https://example.com",
             "Access-Control-Request-Method": "GET",
         },
     )
     assert response.status_code == 200
-    assert "access-control-allow-origin" in response.headers
     assert "access-control-allow-methods" in response.headers
     assert "access-control-allow-headers" in response.headers
 
     # Make a regular GET request with Origin header
-    response = test_client.get("/", headers={"Origin": "https://example.com"})
+    response = test_client.get("/api/v1/hello", headers={"Origin": "https://example.com"})
     assert response.status_code == 200
-    assert "access-control-allow-origin" in response.headers

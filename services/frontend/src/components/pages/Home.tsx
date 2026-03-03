@@ -11,7 +11,7 @@ function Home() {
     const fetchData = async () => {
       try {
         setLoading(true)
-        const response = await fetchFromBackend<Message>('/')
+        const response = await fetchFromBackend<Message>('/api/v1/hello')
         setData(response)
         setError(null)
       } catch (err) {

@@ -3,7 +3,7 @@
 
 def test_read_root(test_client):
     """Test the root endpoint."""
-    response = test_client.get("/")
+    response = test_client.get("/api/v1/hello")
     assert response.status_code == 200
     response_data = response.json()
     assert "data" in response_data

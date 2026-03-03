@@ -6,7 +6,7 @@ import { ApiResponse } from '../types/models'
 
 /**
  * Fetches data from the backend API
- * @param endpoint - The API endpoint to call (e.g., '/' for root endpoint)
+ * @param endpoint - The API endpoint to call (e.g., '/api/v1/hello')
  * @returns The API response
  */
 export async function fetchFromBackend<T>(

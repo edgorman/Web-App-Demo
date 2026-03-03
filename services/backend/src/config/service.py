@@ -11,15 +11,10 @@ class FastAPIServiceConfig(BaseModel):
     reload: bool = False
     app_name: str = "Web-App-Demo Backend"
     app_version: str = "0.1.0"
-
-
-class CORSConfig(BaseModel):
-    """CORS configuration."""
-
-    allow_origins: list[str] = ["*"]
-    allow_credentials: bool = False
-    allow_methods: list[str] = ["*"]
-    allow_headers: list[str] = ["*"]
+    cors_allow_origins: list[str] = []
+    cors_allow_credentials: bool = False
+    cors_allow_methods: list[str] = ["*"]
+    cors_allow_headers: list[str] = ["*"]
 
 
 class ServiceConfig(BaseSettings):
@@ -34,4 +29,3 @@ class ServiceConfig(BaseSettings):
     )
 
     fastapi: FastAPIServiceConfig = FastAPIServiceConfig()
-    cors: CORSConfig = CORSConfig()
