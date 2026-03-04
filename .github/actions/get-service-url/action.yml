@@ -34,7 +34,6 @@ runs:
           --project="$PROJECT" \
           --format='value(metadata.name)' > /dev/null 2>&1; then
           echo "Error: Cloud Run service '$SERVICE' not found in region '$REGION' for project '$PROJECT'"
-          echo "Please ensure the service is deployed before attempting to retrieve its URL."
           exit 1
         fi
         
