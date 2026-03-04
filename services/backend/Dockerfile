@@ -37,19 +37,7 @@ ENV PATH="/app/.venv/bin:$PATH"
 ENV PYTHONUNBUFFERED=1
 
 # Set CORS origins from build argument
-# If FRONTEND_URL is empty, create empty list, otherwise include the URL
-# Note: FRONTEND_URL should be a properly formatted URL (e.g., https://example.com)
-RUN if [ -n "$FRONTEND_URL" ]; then \
-      # Basic validation: check if URL starts with http:// or https://
-      if echo "$FRONTEND_URL" | grep -qE '^https?://'; then \
-        echo "SERVICE__FASTAPI__CORS__ALLOW_ORIGINS=[\"$FRONTEND_URL\"]" > /app/.env; \
-      else \
-        echo "Error: FRONTEND_URL must start with http:// or https://" >&2; \
-        exit 1; \
-      fi; \
-    else \
-      echo "SERVICE__FASTAPI__CORS__ALLOW_ORIGINS=[]" > /app/.env; \
-    fi
+RUN echo "SERVICE__FASTAPI__CORS__ALLOW_ORIGINS=[\"$FRONTEND_URL\"]" > /app/.env
 
 # Expose port (can be overridden by SERVICE__FASTAPI__PORT env var)
 ARG PORT=8080

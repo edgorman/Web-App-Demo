@@ -55,6 +55,9 @@ jobs:
       github.ref_name == 'main' &&
       (needs.infrastructure-root.result == 'success' || needs.infrastructure-root.result == 'skipped')
     runs-on: ubuntu-latest
+    outputs:
+      backend_service_url: ${{ steps.terraform.outputs.backend_service_url }}
+      frontend_service_url: ${{ steps.terraform.outputs.frontend_service_url }}
     permissions:
       contents: read
       id-token: write
@@ -67,7 +70,8 @@ jobs:
           workload_identity_provider: ${{ vars.WORKLOAD_IDENTITY_PROVIDER }}
           service_account: ${{ vars.SERVICE_ACCOUNT }}
           secrets_list: ""
-      - uses: ./.github/actions/terraform-push-commit
+      - id: terraform
+        uses: ./.github/actions/terraform-push-commit
         with:
           terraform_directory: 'infrastructure/env'
           config_directory: 'infrastructure/config/prod'
@@ -82,6 +86,9 @@ jobs:
       github.ref_name == 'develop' &&
       (needs.infrastructure-root.result == 'success' || needs.infrastructure-root.result == 'skipped')
     runs-on: ubuntu-latest
+    outputs:
+      backend_service_url: ${{ steps.terraform.outputs.backend_service_url }}
+      frontend_service_url: ${{ steps.terraform.outputs.frontend_service_url }}
     permissions:
       contents: read
       id-token: write
@@ -94,11 +101,12 @@ jobs:
           workload_identity_provider: ${{ vars.WORKLOAD_IDENTITY_PROVIDER }}
           service_account: ${{ vars.SERVICE_ACCOUNT }}
           secrets_list: ""
-      - uses: ./.github/actions/terraform-push-commit
+      - id: terraform
+        uses: ./.github/actions/terraform-push-commit
         with:
           terraform_directory: 'infrastructure/env'
           config_directory: 'infrastructure/config/dev'
-          secrets: ${{ steps.secrets.outputs.secrets }}
+          secrets: ${{ steps.terraform.outputs.secrets }}
 
   backend-prod:
     needs: [diff, infrastructure-prod]
@@ -114,17 +122,11 @@ jobs:
       id-token: write
     steps:
       - uses: actions/checkout@v5
-      - id: frontend-url
-        uses: ./.github/actions/get-service-url
-        with:
-          project_id: 'web-app-demo-prod'
-          region: 'europe-west1'
-          service_name: 'frontend'
       - uses: ./.github/actions/backend-push-commit
         with:
           project_id: 'web-app-demo-prod'
           region: 'europe-west1'
-          frontend_url: ${{ steps.frontend-url.outputs.url }}
+          frontend_url: ${{ needs.infrastructure-prod.outputs.frontend_service_url }}
           workload_identity_provider: ${{ vars.WORKLOAD_IDENTITY_PROVIDER }}
           service_account: ${{ vars.SERVICE_ACCOUNT }}
 
@@ -142,17 +144,11 @@ jobs:
       id-token: write
     steps:
       - uses: actions/checkout@v5
-      - id: frontend-url
-        uses: ./.github/actions/get-service-url
-        with:
-          project_id: 'web-app-demo-dev'
-          region: 'europe-west1'
-          service_name: 'frontend'
       - uses: ./.github/actions/backend-push-commit
         with:
           project_id: 'web-app-demo-dev'
           region: 'europe-west1'
-          frontend_url: ${{ steps.frontend-url.outputs.url }}
+          frontend_url: ${{ needs.infrastructure-dev.outputs.frontend_service_url }}
           workload_identity_provider: ${{ vars.WORKLOAD_IDENTITY_PROVIDER }}
           service_account: ${{ vars.SERVICE_ACCOUNT }}
 
@@ -178,12 +174,6 @@ jobs:
           workload_identity_provider: ${{ vars.WORKLOAD_IDENTITY_PROVIDER }}
           service_account: ${{ vars.SERVICE_ACCOUNT }}
           secrets_list: ""
-      - id: backend-url
-        uses: ./.github/actions/get-service-url
-        with:
-          project_id: 'web-app-demo-prod'
-          region: 'europe-west1'
-          service_name: 'backend'
       - uses: ./.github/actions/service-push-commit
         with:
           project_id: 'web-app-demo-prod'
@@ -191,7 +181,7 @@ jobs:
           service_name: 'frontend'
           service_directory: 'services/frontend'
           repository_name: 'frontend'
-          docker_build_args: 'VITE_BACKEND_URL=${{ steps.backend-url.outputs.url }}'
+          docker_build_args: 'VITE_BACKEND_URL=${{ needs.infrastructure-prod.outputs.backend_service_url }}'
           workload_identity_provider: ${{ vars.WORKLOAD_IDENTITY_PROVIDER }}
           service_account: ${{ vars.SERVICE_ACCOUNT }}
 
@@ -217,12 +207,6 @@ jobs:
           workload_identity_provider: ${{ vars.WORKLOAD_IDENTITY_PROVIDER }}
           service_account: ${{ vars.SERVICE_ACCOUNT }}
           secrets_list: ""
-      - id: backend-url
-        uses: ./.github/actions/get-service-url
-        with:
-          project_id: 'web-app-demo-dev'
-          region: 'europe-west1'
-          service_name: 'backend'
       - uses: ./.github/actions/service-push-commit
         with:
           project_id: 'web-app-demo-dev'
@@ -230,6 +214,6 @@ jobs:
           service_name: 'frontend'
           service_directory: 'services/frontend'
           repository_name: 'frontend'
-          docker_build_args: 'VITE_BACKEND_URL=${{ steps.backend-url.outputs.url }}'
+          docker_build_args: 'VITE_BACKEND_URL=${{ needs.infrastructure-dev.outputs.backend_service_url }}'
           workload_identity_provider: ${{ vars.WORKLOAD_IDENTITY_PROVIDER }}
           service_account: ${{ vars.SERVICE_ACCOUNT }}
