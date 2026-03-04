@@ -37,12 +37,13 @@ ENV PATH="/app/.venv/bin:$PATH"
 ENV PYTHONUNBUFFERED=1
 
 # Set CORS origins from build argument
-# If FRONTEND_URL is empty, allow all origins (["*"]) for development
-# In production, FRONTEND_URL should always be provided for security
+# If FRONTEND_URL is provided, use it for secure CORS configuration
+# If FRONTEND_URL is empty, use localhost for local development
+# Production deployments should ALWAYS provide FRONTEND_URL
 RUN if [ -n "$FRONTEND_URL" ]; then \
       echo "SERVICE__FASTAPI__CORS__ALLOW_ORIGINS=[\"$FRONTEND_URL\"]" > /app/.env; \
     else \
-      echo "SERVICE__FASTAPI__CORS__ALLOW_ORIGINS=[\"*\"]" > /app/.env; \
+      echo "SERVICE__FASTAPI__CORS__ALLOW_ORIGINS=[\"http://localhost:5173\",\"http://localhost:3000\"]" > /app/.env; \
     fi
 
 # Expose port (can be overridden by SERVICE__FASTAPI__PORT env var)
