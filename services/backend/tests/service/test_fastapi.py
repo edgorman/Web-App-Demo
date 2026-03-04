@@ -32,7 +32,6 @@ def test_hello_endpoint(test_client):
 def test_cors_headers(test_client):
     """Test that CORS middleware is configured."""
     # Make an OPTIONS request (preflight request)
-    # Note: With default empty origins list, CORS will not set allow-origin header
     response = test_client.options(
         "/api/v1/hello",
         headers={
@@ -42,5 +41,7 @@ def test_cors_headers(test_client):
     )
     assert response.status_code == 200
     # CORS middleware is active and processes preflight requests
+    assert "access-control-allow-origin" in response.headers
+    assert response.headers["access-control-allow-origin"] == "https://example.com"
     assert "access-control-allow-methods" in response.headers
     assert "access-control-allow-headers" in response.headers
