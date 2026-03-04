@@ -46,9 +46,11 @@ RUN if [ -z "$FRONTEND_URL" ]; then \
       http://*|https://*) ;; \
       *) echo "ERROR: FRONTEND_URL must start with http:// or https://" >&2; exit 1 ;; \
     esac && \
+    echo "$FRONTEND_URL" > /app/.frontend_url && \
     printf '%s\n' \
       '#!/bin/sh' \
-      'export SERVICE__FASTAPI__CORS__ALLOW_ORIGINS='"'"'["'"$FRONTEND_URL"'"]'"'"'' \
+      'FRONTEND_URL=$(cat /app/.frontend_url)' \
+      'export SERVICE__FASTAPI__CORS__ALLOW_ORIGINS="[\"$FRONTEND_URL\"]"' \
       'exec "$@"' \
       > /app/entrypoint.sh && \
     chmod +x /app/entrypoint.sh && \
