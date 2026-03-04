@@ -37,10 +37,18 @@ ENV PATH="/app/.venv/bin:$PATH"
 ENV PYTHONUNBUFFERED=1
 
 # Set CORS origins from build argument
-# Write to shell script that will be sourced at container start
-RUN printf '#!/bin/sh\nexport SERVICE__FASTAPI__CORS__ALLOW_ORIGINS='"'"'["%s"]'"'"'\nexec "$@"\n' "$FRONTEND_URL" > /app/entrypoint.sh && \
+# Validate that FRONTEND_URL is provided and not empty
+RUN if [ -z "$FRONTEND_URL" ]; then \
+      echo "ERROR: FRONTEND_URL build argument is required but was not provided" >&2; \
+      exit 1; \
+    fi && \
+    printf '%s\n' \
+      '#!/bin/sh' \
+      'export SERVICE__FASTAPI__CORS__ALLOW_ORIGINS='"'"'["'"$FRONTEND_URL"'"]'"'"'' \
+      'exec "$@"' \
+      > /app/entrypoint.sh && \
     chmod +x /app/entrypoint.sh && \
-    cat /app/entrypoint.sh
+    echo "Created entrypoint with CORS origin: $FRONTEND_URL"
 
 # Expose port (can be overridden by SERVICE__FASTAPI__PORT env var)
 ARG PORT=8080
