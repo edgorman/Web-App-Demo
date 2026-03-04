@@ -6,7 +6,7 @@ from src.service.fastapi.resources.v1._objects import Response
 router = APIRouter()
 
 
-@router.get("/", response_model=Response[Message])
+@router.get("/hello", response_model=Response[Message])
 def read_root():
     """Return a welcome message.
 
