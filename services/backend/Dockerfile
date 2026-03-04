@@ -23,8 +23,8 @@ WORKDIR /app
 # Set Python version environment variable
 ENV PYTHON_VERSION=${PYTHON_VERSION}
 
-# Accept frontend URL as build argument (optional, uses localhost origins if not provided)
-ARG FRONTEND_URL=""
+# Accept frontend URL as build argument
+ARG FRONTEND_URL
 
 # Copy virtual environment from builder
 COPY --from=builder /app/.venv /app/.venv
@@ -37,14 +37,7 @@ ENV PATH="/app/.venv/bin:$PATH"
 ENV PYTHONUNBUFFERED=1
 
 # Set CORS origins from build argument
-# If FRONTEND_URL is provided, use it for secure CORS configuration
-# If FRONTEND_URL is empty, use localhost for local development
-# Production deployments should ALWAYS provide FRONTEND_URL
-RUN if [ -n "$FRONTEND_URL" ]; then \
-      echo "SERVICE__FASTAPI__CORS__ALLOW_ORIGINS=[\"$FRONTEND_URL\"]" > /app/.env; \
-    else \
-      echo "SERVICE__FASTAPI__CORS__ALLOW_ORIGINS=[\"http://localhost:5173\",\"http://localhost:3000\"]" > /app/.env; \
-    fi
+RUN echo "SERVICE__FASTAPI__CORS__ALLOW_ORIGINS=[\"$FRONTEND_URL\"]" > /app/.env
 
 # Expose port (can be overridden by SERVICE__FASTAPI__PORT env var)
 ARG PORT=8080
