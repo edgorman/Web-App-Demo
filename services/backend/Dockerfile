@@ -23,7 +23,7 @@ WORKDIR /app
 # Set Python version environment variable
 ENV PYTHON_VERSION=${PYTHON_VERSION}
 
-# Accept frontend URL as build argument (optional, will allow all origins if not provided)
+# Accept frontend URL as build argument (optional, uses localhost origins if not provided)
 ARG FRONTEND_URL=""
 
 # Copy virtual environment from builder
