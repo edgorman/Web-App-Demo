@@ -33,15 +33,8 @@ runs:
           --region="$REGION" \
           --project="$PROJECT" \
           --format='value(metadata.name)' > /dev/null 2>&1; then
-          echo "Warning: Cloud Run service '$SERVICE' not found in region '$REGION' for project '$PROJECT'"
-          echo "This is expected for first-time deployments or if the service hasn't been created yet."
-          echo "If this service should already exist, please verify:"
-          echo "  - Service name is correct: $SERVICE"
-          echo "  - Region is correct: $REGION"
-          echo "  - Project is correct: $PROJECT"
-          echo "Returning empty URL."
-          echo "url=" >> $GITHUB_OUTPUT
-          exit 0
+          echo "Error: Cloud Run service '$SERVICE' not found in region '$REGION' for project '$PROJECT'"
+          exit 1
         fi
         
         SERVICE_URL=$(gcloud run services describe "$SERVICE" \
@@ -50,10 +43,8 @@ runs:
           --format='value(status.url)')
         
         if [ -z "$SERVICE_URL" ]; then
-          echo "Warning: Failed to retrieve service URL for '$SERVICE'"
-          echo "Returning empty URL."
-          echo "url=" >> $GITHUB_OUTPUT
-          exit 0
+          echo "Error: Failed to retrieve service URL for '$SERVICE'"
+          exit 1
         fi
         
         echo "url=${SERVICE_URL}" >> $GITHUB_OUTPUT
