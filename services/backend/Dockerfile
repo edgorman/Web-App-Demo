@@ -37,11 +37,15 @@ ENV PATH="/app/.venv/bin:$PATH"
 ENV PYTHONUNBUFFERED=1
 
 # Set CORS origins from build argument
-RUN echo "SERVICE__FASTAPI__CORS__ALLOW_ORIGINS=[\"$FRONTEND_URL\"]" > /app/.env
+# Write to shell script that will be sourced at container start
+RUN printf '#!/bin/sh\nexport SERVICE__FASTAPI__CORS__ALLOW_ORIGINS='"'"'["%s"]'"'"'\nexec "$@"\n' "$FRONTEND_URL" > /app/entrypoint.sh && \
+    chmod +x /app/entrypoint.sh && \
+    cat /app/entrypoint.sh
 
 # Expose port (can be overridden by SERVICE__FASTAPI__PORT env var)
 ARG PORT=8080
 EXPOSE ${PORT}
 
-# Run the application
+# Use entrypoint to set environment variable, then run the application
+ENTRYPOINT ["/app/entrypoint.sh"]
 CMD ["python", "-m", "src.cli.cli", "run"]
