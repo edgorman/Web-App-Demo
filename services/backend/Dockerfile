@@ -37,11 +37,15 @@ ENV PATH="/app/.venv/bin:$PATH"
 ENV PYTHONUNBUFFERED=1
 
 # Set CORS origins from build argument
-# Validate that FRONTEND_URL is provided and not empty
+# Validate that FRONTEND_URL is provided, not empty, and has valid URL format
 RUN if [ -z "$FRONTEND_URL" ]; then \
       echo "ERROR: FRONTEND_URL build argument is required but was not provided" >&2; \
       exit 1; \
     fi && \
+    case "$FRONTEND_URL" in \
+      http://*|https://*) ;; \
+      *) echo "ERROR: FRONTEND_URL must start with http:// or https://" >&2; exit 1 ;; \
+    esac && \
     printf '%s\n' \
       '#!/bin/sh' \
       'export SERVICE__FASTAPI__CORS__ALLOW_ORIGINS='"'"'["'"$FRONTEND_URL"'"]'"'"'' \
