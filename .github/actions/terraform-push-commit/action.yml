@@ -13,14 +13,6 @@ inputs:
     required: false
     default: ''
 
-outputs:
-  backend_service_url:
-    description: 'The URL of the backend Cloud Run service'
-    value: ${{ steps.terraform-output.outputs.backend_service_url }}
-  frontend_service_url:
-    description: 'The URL of the frontend Cloud Run service'
-    value: ${{ steps.terraform-output.outputs.frontend_service_url }}
-
 runs:
   using: "composite"
   steps:
@@ -35,7 +27,6 @@ runs:
       uses: hashicorp/setup-terraform@v3
       with:
         terraform_version: "1.13.5"
-        terraform_wrapper: false
 
     - name: Terraform Init
       shell: bash
@@ -51,22 +42,3 @@ runs:
         terraform apply \
           -var-file="${{ github.workspace }}/${{ inputs.config_directory }}/terraform.tfvars" \
           -auto-approve
-
-    - name: Get Terraform Outputs
-      id: terraform-output
-      shell: bash
-      working-directory: ${{ inputs.terraform_directory }}
-      run: |
-        # Get terraform outputs (only for env infrastructure, not root)
-        if terraform output backend_service_url > /dev/null 2>&1; then
-          BACKEND_URL=$(terraform output -raw backend_service_url)
-          FRONTEND_URL=$(terraform output -raw frontend_service_url)
-          echo "backend_service_url=${BACKEND_URL}" >> $GITHUB_OUTPUT
-          echo "frontend_service_url=${FRONTEND_URL}" >> $GITHUB_OUTPUT
-          echo "Backend URL: ${BACKEND_URL}"
-          echo "Frontend URL: ${FRONTEND_URL}"
-        else
-          echo "No service URLs output (root infrastructure)"
-          echo "backend_service_url=" >> $GITHUB_OUTPUT
-          echo "frontend_service_url=" >> $GITHUB_OUTPUT
-        fi
