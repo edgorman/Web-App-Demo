@@ -34,7 +34,12 @@ runs:
           --project="$PROJECT" \
           --format='value(metadata.name)' > /dev/null 2>&1; then
           echo "Warning: Cloud Run service '$SERVICE' not found in region '$REGION' for project '$PROJECT'"
-          echo "Returning empty URL. This is expected for first-time deployments."
+          echo "This is expected for first-time deployments or if the service hasn't been created yet."
+          echo "If this service should already exist, please verify:"
+          echo "  - Service name is correct: $SERVICE"
+          echo "  - Region is correct: $REGION"
+          echo "  - Project is correct: $PROJECT"
+          echo "Returning empty URL."
           echo "url=" >> $GITHUB_OUTPUT
           exit 0
         fi
