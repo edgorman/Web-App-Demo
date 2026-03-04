@@ -106,7 +106,7 @@ jobs:
         with:
           terraform_directory: 'infrastructure/env'
           config_directory: 'infrastructure/config/dev'
-          secrets: ${{ steps.terraform.outputs.secrets }}
+          secrets: ${{ steps.secrets.outputs.secrets }}
 
   backend-prod:
     needs: [diff, infrastructure-prod]
