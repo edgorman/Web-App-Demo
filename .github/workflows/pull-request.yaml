@@ -72,7 +72,9 @@ jobs:
         with:
           terraform_directory: 'infrastructure/env'
           config_directory: 'infrastructure/config/prod'
-          secrets: ${{ steps.secrets.outputs.secrets }}
+          secrets: |
+            ${{ steps.secrets.outputs.secrets }}
+            TF_VAR_google_client_id=${{ vars.GOOGLE_CLIENT_ID }}
           github_token: ${{ secrets.GITHUB_TOKEN }}
 
   infrastructure-dev:
@@ -96,7 +98,9 @@ jobs:
         with:
           terraform_directory: 'infrastructure/env'
           config_directory: 'infrastructure/config/dev'
-          secrets: ${{ steps.secrets.outputs.secrets }}
+          secrets: |
+            ${{ steps.secrets.outputs.secrets }}
+            TF_VAR_google_client_id=${{ vars.GOOGLE_CLIENT_ID }}
           github_token: ${{ secrets.GITHUB_TOKEN }}
 
   backend:

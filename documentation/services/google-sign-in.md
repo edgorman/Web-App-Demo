@@ -27,16 +27,20 @@ Follow [Get your Google API client ID](https://developers.google.com/identity/gs
 
 ## 2. Configure the client ID
 
-The same client ID needs to reach three places. Each defaults to an empty string, so the feature deploys safely and simply stays disabled until configured.
+A single OAuth client ID (with authorized origins for both dev and prod) is defined **once**, in the root project, and reused everywhere — it isn't duplicated per environment.
 
-| Location | Purpose |
-| --- | --- |
-| `SERVICE__AUTH__GOOGLE__CLIENT_ID` (backend env var) | Backend verifies tokens are audienced for this client ID. Set via `infrastructure/config/{dev,prod}/terraform.tfvars` -> `google_client_id`, or in `services/backend/.env` for local development. |
-| `VITE_GOOGLE_CLIENT_ID` (frontend build-time env var) | Frontend passes this client ID to `google.accounts.id.initialize()`. Set in `services/frontend/.env` for local development. |
-| `GOOGLE_CLIENT_ID` (GitHub Actions repository variable) | CI/CD passes this into the frontend Docker build (`docker_build_args` in `push-commit.yaml`). Managed by Terraform via `infrastructure/root/variables.tf` -> `google_client_id` / `infrastructure/root/github_repository.tf`. |
+### Deployed environments (dev/prod)
 
-For local development, copy `.env.example` to `.env` in both `services/backend/` and `services/frontend/` and fill in the client ID.
+1. Set `google_client_id` in `infrastructure/root/variables.tf` (or `infrastructure/config/root/terraform.tfvars`) and apply `infrastructure/root` — this is a one-time, root-only Terraform apply that also runs automatically on merges to `main`.
+2. That apply writes the value into a `GOOGLE_CLIENT_ID` GitHub Actions repository variable (`infrastructure/root/github_repository.tf`).
+3. From there, CI wires it into both dev and prod automatically, with no further per-environment configuration:
+   - `push-commit.yaml`/`pull-request.yaml` pass it to `terraform plan`/`apply` for `infrastructure/env` as `TF_VAR_google_client_id`, which becomes the backend Cloud Run service's `SERVICE__AUTH__GOOGLE__CLIENT_ID` env var (`infrastructure/env/gcp_cloud_run.tf`) for both `web-app-demo-dev` and `web-app-demo-prod`.
+   - `push-commit.yaml` passes it to the frontend Docker build as `VITE_GOOGLE_CLIENT_ID` (`docker_build_args`), for both dev and prod frontend images.
 
-For deployed environments, set `google_client_id` in `infrastructure/config/dev/terraform.tfvars`, `infrastructure/config/prod/terraform.tfvars`, and `infrastructure/root/variables.tf` (or `infrastructure/config/root/terraform.tfvars`), then apply as usual — pushes to `develop`/`main` handle this automatically via CI/CD.
+`infrastructure/env`'s `google_client_id` variable still exists (it's what the Cloud Run env var is set from) but is intentionally left out of `infrastructure/config/dev/terraform.tfvars` and `infrastructure/config/prod/terraform.tfvars` — it's supplied by CI, not per-environment tfvars.
+
+### Local development
+
+Copy `.env.example` to `.env` in both `services/backend/` and `services/frontend/` and fill in `SERVICE__AUTH__GOOGLE__CLIENT_ID` / `VITE_GOOGLE_CLIENT_ID` with the same client ID (make sure `http://localhost:3000` is one of its authorized JavaScript origins).
 
 If the client ID is left unset, the frontend shows a "Google sign-in is not configured" message instead of a button, and the backend returns `500` from `/api/v1/auth/google`.
