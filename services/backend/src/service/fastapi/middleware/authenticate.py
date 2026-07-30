@@ -70,8 +70,8 @@ class AuthenticateBackend(AuthenticationBackend):
             return google_id_token.verify_oauth2_token(
                 token, google_requests.Request(), audience=self.__google_client_id
             )
-        except ValueError as e:
-            raise AuthError(401, f"Invalid Google ID token: {e}")
+        except Exception as e:
+            raise AuthError(401, f"Could not authenticate with provider `{AuthProvider.GOOGLE.value}`: `{e}`.")
 
     def _get_user(self, provider_data: dict) -> User:
         return User(

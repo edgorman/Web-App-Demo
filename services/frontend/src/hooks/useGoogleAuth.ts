@@ -14,7 +14,10 @@ const SCRIPT_ELEMENT_ID = 'google-identity-services'
 const AUTH_PROVIDER = 'google'
 
 function decodeCredential(credential: string): User {
-  const payload = JSON.parse(atob(credential.split('.')[1]))
+  // JWT payloads are base64url-encoded (`-`/`_`, no padding); atob() only
+  // understands standard base64 (`+`/`/`), so translate before decoding.
+  const base64 = credential.split('.')[1].replace(/-/g, '+').replace(/_/g, '/')
+  const payload = JSON.parse(atob(base64))
   return {
     id: payload.sub,
     email: payload.email,
