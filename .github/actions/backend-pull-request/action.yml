@@ -37,4 +37,6 @@ runs:
       shell: bash
       working-directory: services/backend
       run: |
-        make docker-build IMAGE_TAG=${{ github.sha }}
+        docker build \
+          -t web-app-demo-backend:${{ github.sha }} \
+          .

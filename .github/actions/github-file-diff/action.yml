@@ -1,6 +1,11 @@
 name: 'GitHub File Diff'
 description: 'Determines which parts of the infrastructure and services have changed'
 
+inputs:
+  branch_ref:
+    description: 'The branch we are generating a diff against'
+    required: true
+
 outputs:
   infrastructure-root:
     description: 'Whether infrastructure root files changed'
@@ -14,6 +19,9 @@ outputs:
   service-backend:
     description: 'Whether backend service files changed'
     value: ${{ steps.filter.outputs.service-backend }}
+  service-frontend:
+    description: 'Whether frontend service files changed'
+    value: ${{ steps.filter.outputs.service-frontend }}
 
 runs:
   using: "composite"
@@ -21,6 +29,7 @@ runs:
     - uses: dorny/paths-filter@v3
       id: filter
       with:
+        base: ${{ inputs.branch_ref }}
         filters: |
           infrastructure-root:
             - 'infrastructure/config/root/**'
@@ -41,3 +50,8 @@ runs:
             - 'services/backend/**'
             - '.github/actions/backend-pull-request/**'
             - '.github/actions/backend-push-commit/**'
+            - '.github/actions/service-push-commit/**'
+          service-frontend:
+            - 'services/frontend/**'
+            - '.github/actions/frontend-push-commit/**'
+            - '.github/actions/service-push-commit/**'

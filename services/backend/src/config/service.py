@@ -3,6 +3,15 @@ from pydantic import BaseModel
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
+class CORSConfig(BaseModel):
+    """CORS configuration."""
+
+    allow_origins: list[str] = []
+    allow_credentials: bool = False
+    allow_methods: list[str] = ["*"]
+    allow_headers: list[str] = ["*"]
+
+
 class FastAPIServiceConfig(BaseModel):
     """FastAPI-specific configuration."""
 
@@ -11,6 +20,7 @@ class FastAPIServiceConfig(BaseModel):
     reload: bool = False
     app_name: str = "Web-App-Demo Backend"
     app_version: str = "0.1.0"
+    cors: CORSConfig = CORSConfig()
 
 
 class ServiceConfig(BaseSettings):

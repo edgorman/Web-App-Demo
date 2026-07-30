@@ -1,0 +1,51 @@
+name: 'Get Cloud Run Service URL'
+description: 'Retrieves the URL of a Cloud Run service'
+
+inputs:
+  project_id:
+    description: 'GCP Project ID'
+    required: true
+  region:
+    description: 'GCP Region'
+    required: true
+  service_name:
+    description: 'Cloud Run service name'
+    required: true
+
+outputs:
+  url:
+    description: 'The URL of the Cloud Run service'
+    value: ${{ steps.get-url.outputs.url }}
+
+runs:
+  using: "composite"
+  steps:
+    - name: Get Cloud Run service URL
+      id: get-url
+      shell: bash
+      run: |
+        SERVICE="${{ inputs.service_name }}"
+        REGION="${{ inputs.region }}"
+        PROJECT="${{ inputs.project_id }}"
+        
+        # Check if service exists
+        if ! gcloud run services describe "$SERVICE" \
+          --region="$REGION" \
+          --project="$PROJECT" \
+          --format='value(metadata.name)' > /dev/null 2>&1; then
+          echo "Error: Cloud Run service '$SERVICE' not found in region '$REGION' for project '$PROJECT'"
+          exit 1
+        fi
+        
+        SERVICE_URL=$(gcloud run services describe "$SERVICE" \
+          --region="$REGION" \
+          --project="$PROJECT" \
+          --format='value(status.url)')
+        
+        if [ -z "$SERVICE_URL" ]; then
+          echo "Error: Failed to retrieve service URL for '$SERVICE'"
+          exit 1
+        fi
+        
+        echo "url=${SERVICE_URL}" >> $GITHUB_OUTPUT
+        echo "Cloud Run service URL: ${SERVICE_URL}"

@@ -21,7 +21,6 @@ FROM python:${PYTHON_VERSION}-slim
 WORKDIR /app
 
 # Set Python version environment variable
-ARG PYTHON_VERSION=3.13
 ENV PYTHON_VERSION=${PYTHON_VERSION}
 
 # Copy virtual environment from builder
@@ -34,8 +33,9 @@ COPY src ./src
 ENV PATH="/app/.venv/bin:$PATH"
 ENV PYTHONUNBUFFERED=1
 
-# Expose port
-EXPOSE 8080
+# Expose port (can be overridden by SERVICE__FASTAPI__PORT env var)
+ARG PORT=8080
+EXPOSE ${PORT}
 
 # Run the application
 CMD ["python", "-m", "src.cli.cli", "run"]

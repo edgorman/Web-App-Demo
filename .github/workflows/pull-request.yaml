@@ -18,10 +18,13 @@ jobs:
       infrastructure-prod: ${{ steps.diff.outputs.infrastructure-prod }}
       infrastructure-dev: ${{ steps.diff.outputs.infrastructure-dev }}
       service-backend: ${{ steps.diff.outputs.service-backend }}
+      service-frontend: ${{ steps.diff.outputs.service-frontend }}
     steps:
       - uses: actions/checkout@v5
       - id: diff
         uses: ./.github/actions/github-file-diff
+        with: 
+          branch_ref: ${{ github.base_ref }}
 
   infrastructure-root:
     needs: diff
@@ -105,3 +108,13 @@ jobs:
     steps:
       - uses: actions/checkout@v5
       - uses: ./.github/actions/backend-pull-request
+
+  frontend:
+    needs: diff
+    if: needs.diff.outputs.service-frontend == 'true'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v5
+      - uses: ./.github/actions/frontend-pull-request

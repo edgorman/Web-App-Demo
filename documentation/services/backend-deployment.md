@@ -11,7 +11,7 @@ The backend service is a FastAPI application deployed to Google Cloud Run. It's 
 ### Cloud Run Service
 - **Service Name**: `backend` (configurable per environment)
 - **Region**: `europe-west1` (default)
-- **Container Port**: 8000
+- **Container Port**: 8080
 - **Image Source**: Google Artifact Registry
 
 ### Resource Configuration
@@ -19,24 +19,30 @@ The backend service is a FastAPI application deployed to Google Cloud Run. It's 
 - **Memory**: 512 MiB
 - **Min Instances**: 
   - Dev: 0 (scales to zero for cost savings)
-  - Prod: 1 (keeps warm instance to avoid cold starts)
+  - Prod: 0 (scales to zero for cost savings)
 - **Max Instances**:
   - Dev: 5
   - Prod: 10
 
 ### Access Control
-The backend service is configured with public access (`allUsers` invoker role) for demo purposes. For production deployments with sensitive data, consider implementing:
-- Cloud Run's built-in authentication
-- API Gateway with API keys
-- Application-level authentication (OAuth, JWT, etc.)
+- **Public Access**: Allowed - `allUsers` has `roles/run.invoker`. This is required, not incidental: the frontend is a static SPA and calls the backend straight from the user's browser with no GCP credentials, so Cloud Run sees anonymous traffic. Without this binding every browser request is rejected with a 403 before FastAPI runs, and because that response carries no CORS headers the browser reports it as a CORS error.
+- **Frontend Service Account**: The frontend Cloud Run service's service account also has `roles/run.invoker`. This covers server-side service-to-service calls only — it is not what allows the browser traffic through.
+- **Application-layer control**: The FastAPI CORS middleware restricts which origins browsers will permit to call the API. Terraform is the source of truth for this, injecting the frontend's URLs via the `SERVICE__FASTAPI__CORS__ALLOW_ORIGINS` environment variable.
+
+Note that CORS is a browser-enforced control, not a server-side authorisation
+control — it stops other websites from reading the API from a user's browser, but
+it does not stop direct requests. To make the backend genuinely non-public, the
+frontend would need to stop calling it from the browser (for example by having
+nginx proxy `/api` with an identity token attached).
 
 ## Infrastructure Files
 
 ### Terraform Configuration
 Located in `infrastructure/env/`:
 - `gcp_cloud_run.tf` - Cloud Run service and IAM configuration
+- `gcp_service_account.tf` - Custom service account for the backend service
 - `variables.tf` - Input variables
-- `outputs.tf` - Service URL and name outputs
+- `outputs.tf` - Service URL, name, and service account outputs
 - `providers.tf` - Provider configuration
 
 ### Environment Configuration
@@ -107,6 +113,8 @@ When backend service files are changed and pushed:
 
 ## Accessing the Service
 
+The backend service is reachable directly over HTTPS, since the frontend calls it from the user's browser. Which origins browsers will allow to call it is controlled by the FastAPI CORS allow-list.
+
 After deployment, the service URL is available as a Terraform output:
 
 ```bash
@@ -114,6 +122,8 @@ terraform output backend_service_url
 ```
 
 The URL will be in the format: `https://backend-<hash>-<region>.run.app`
+
+The frontend service automatically invokes the backend with proper authentication using its service account identity.
 
 ## Monitoring and Logs
 
@@ -160,11 +170,16 @@ Development environment with min_instances=0 only incurs costs during active use
 **Issue: Service won't start**
 - Check container logs in Cloud Console
 - Verify the container image exists in Artifact Registry
-- Ensure the container listens on port 8000
+- Ensure the container listens on port 8080
 
 **Issue: 403 Forbidden**
-- Verify the IAM policy allows public access
+- Verify the `backend_public_access` IAM member (`allUsers` → `roles/run.invoker`) still exists in `infrastructure/env/gcp_cloud_run.tf`. Removing it is the usual cause, and in a browser it looks like a CORS error rather than a 403.
 - Check that the service is deployed and healthy
+- Ensure the IAM policy is correctly configured in Terraform
+
+**Issue: CORS error in the browser**
+- First confirm it is actually CORS and not a 403 from Cloud Run IAM. Open the backend URL directly, or check the response status: a Cloud Run IAM rejection returns 403 with no `Access-Control-Allow-Origin` header, which the browser reports as a CORS failure.
+- If the request reaches FastAPI, check that `SERVICE__FASTAPI__CORS__ALLOW_ORIGINS` on the deployed revision contains the frontend's origin. Terraform sets this from `google_cloud_run_v2_service.frontend.urls`.
 
 **Issue: Cold starts taking too long**
 - Consider increasing `backend_min_instances` in tfvars
@@ -176,11 +191,19 @@ Development environment with min_instances=0 only incurs costs during active use
 ### Current Configuration
 - ✅ Container runs as non-root user (configured in Dockerfile)
 - ✅ HTTPS enforced (automatic with Cloud Run)
-- ⚠️ Public access enabled for demo purposes
+- ✅ Custom service account with minimal permissions (follows GCP best practices)
+- ⚠️ Public at the Cloud Run IAM layer (`allUsers` → `roles/run.invoker`), required for the browser-based frontend
+- ✅ Origin restrictions enforced by the FastAPI CORS allow-list, managed by Terraform
+
+### Service Account
+The backend service uses a dedicated custom service account (`backend-sa`) instead of the default Compute Engine service account. This follows the principle of least privilege and GCP security best practices:
+- No additional IAM role bindings are required as the backend is a stateless FastAPI application
+- The service account is used solely to run the Cloud Run service
+- This eliminates security warnings about using the default service account with broad IAM permissions
 
 ### Production Recommendations
-1. Implement authentication at the application or infrastructure level
-2. Use Cloud Armor for DDoS protection
-3. Enable VPC egress controls if accessing internal services
-4. Implement rate limiting
-5. Use Cloud Run IAM for service-to-service authentication
+1. Use Cloud Armor for DDoS protection
+2. Enable VPC egress controls if accessing internal services
+3. Implement rate limiting at the application level
+4. Monitor and alert on suspicious access patterns
+5. Regularly review and audit IAM permissions
