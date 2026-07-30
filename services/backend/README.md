@@ -44,7 +44,7 @@ make install
 Or using uv directly:
 
 ```bash
-uv sync
+uv sync --extra dev
 ```
 
 ## Running the Service
@@ -76,10 +76,10 @@ docker build -t web-app-demo-backend .
 Run the container:
 
 ```bash
-docker run -d -p 8000:8000 --name backend web-app-demo-backend
+docker run -d -p 8080:8080 --name backend web-app-demo-backend
 ```
 
-The service will be available at `http://localhost:8000`
+The service will be available at `http://localhost:8080`
 
 Stop the container:
 
@@ -108,7 +108,7 @@ make test
 
 ## API Endpoints
 
-- `GET /` - Returns a welcome message
+- `GET /api/v1/hello` - Returns a welcome message
 
 ## Configuration
 

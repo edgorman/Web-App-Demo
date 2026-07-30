@@ -11,7 +11,7 @@ The backend service is a FastAPI application deployed to Google Cloud Run. It's 
 ### Cloud Run Service
 - **Service Name**: `backend` (configurable per environment)
 - **Region**: `europe-west1` (default)
-- **Container Port**: 8000
+- **Container Port**: 8080
 - **Image Source**: Google Artifact Registry
 
 ### Resource Configuration
@@ -19,7 +19,7 @@ The backend service is a FastAPI application deployed to Google Cloud Run. It's 
 - **Memory**: 512 MiB
 - **Min Instances**: 
   - Dev: 0 (scales to zero for cost savings)
-  - Prod: 1 (keeps warm instance to avoid cold starts)
+  - Prod: 0 (scales to zero for cost savings)
 - **Max Instances**:
   - Dev: 5
   - Prod: 10
@@ -166,7 +166,7 @@ Development environment with min_instances=0 only incurs costs during active use
 **Issue: Service won't start**
 - Check container logs in Cloud Console
 - Verify the container image exists in Artifact Registry
-- Ensure the container listens on port 8000
+- Ensure the container listens on port 8080
 
 **Issue: 403 Forbidden**
 - Verify the frontend service account has the `roles/run.invoker` role on the backend service
