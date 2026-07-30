@@ -48,8 +48,7 @@ src/
 ├── hooks/
 │   └── useGoogleAuth.ts
 ├── services/
-│   ├── api.ts
-│   └── auth.ts
+│   └── api.ts
 ├── types/
 │   ├── google.d.ts
 │   └── models.ts

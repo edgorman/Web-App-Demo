@@ -6,17 +6,22 @@ from src.objects.user import User
 
 def test_user_creation():
     """Test creating a user object."""
-    user = User(id="123", email="user@example.com", name="Test User", picture="https://example.com/pic.jpg")
+    user = User(id="123", email="user@example.com", name="Test User")
     assert user.id == "123"
     assert user.email == "user@example.com"
     assert user.name == "Test User"
-    assert user.picture == "https://example.com/pic.jpg"
 
 
-def test_user_creation_without_picture():
-    """Test creating a user object without a picture."""
+def test_user_is_authenticated():
+    """Test that a user is always considered authenticated."""
     user = User(id="123", email="user@example.com", name="Test User")
-    assert user.picture is None
+    assert user.is_authenticated is True
+
+
+def test_user_display_name():
+    """Test that display_name returns the user's name."""
+    user = User(id="123", email="user@example.com", name="Test User")
+    assert user.display_name == "Test User"
 
 
 def test_user_validation():

@@ -1,16 +1,19 @@
 # Google Sign-In
 
-The frontend supports "Sign in with Google" using [Google Identity Services (GSI)](https://developers.google.com/identity/gsi/web/guides/overview). The frontend collects a Google-issued ID token from the user's browser and the backend verifies it before treating the user as authenticated.
+The frontend supports "Sign in with Google" using [Google Identity Services (GSI)](https://developers.google.com/identity/gsi/web/guides/overview). Authentication is enforced by backend middleware — there is no dedicated login endpoint. The frontend sends the Google-issued ID token as a bearer credential on each request, and the backend verifies it per-request.
 
 ## How it works
 
 1. `services/frontend/index.html` loads the GSI client library (`https://accounts.google.com/gsi/client`).
 2. `src/hooks/useGoogleAuth.ts` initializes the library with the configured client ID and renders the "Sign in with Google" button (`src/components/common/GoogleSignInButton.tsx`) once the library is ready.
-3. On sign-in, Google calls back with a signed JWT credential. The frontend POSTs it to the backend via `src/services/auth.ts` (`POST /api/v1/auth/google`).
-4. The backend (`src/service/fastapi/resources/v1/auth.py`) verifies the credential's signature, audience, and issuer using the [`google-auth`](https://google-auth.readthedocs.io/) library, then returns the verified profile (`src/objects/user.py`).
-5. The frontend stores the verified profile in `localStorage` so the signed-in state survives a page refresh, and provides a sign-out action that clears it.
+3. On sign-in, Google calls back with a signed JWT credential. The frontend decodes it client-side (for display only — `id`/`email`/`name`) and holds onto the raw credential as the bearer token for the session; there is no backend call at sign-in time.
+4. On every backend request, the frontend attaches `Authorization: Bearer <credential>` and `Authorization-Provider: google` headers (`src/hooks/useGoogleAuth.ts`'s `authHeaders`).
+5. The backend's authentication middleware (`src/service/fastapi/middleware/authenticate.py`, registered on every request via `AuthenticationMiddleware`) verifies the credential's signature, audience, and issuer using the [`google-auth`](https://google-auth.readthedocs.io/) library, and attaches the verified profile to `request.user` (`src/objects/user.py`). Route handlers — e.g. `GET /api/v1/hello` (`src/service/fastapi/resources/v1/hello.py`) — read `request.user` to personalize behavior, but authentication itself isn't tied to any specific route.
+6. Requests with no `Authorization` header are treated as anonymous (`request.user.is_authenticated` is `False`), not rejected — routes opt into requiring authentication themselves (none currently do).
 
-The backend never trusts anything from the frontend other than the opaque credential string — the user's identity (id, email, name, picture) always comes from Google's verified token payload, not from client-supplied fields.
+The backend never trusts anything from the frontend other than the opaque credential string — the user's identity (id, email, name) always comes from Google's verified token payload, not from client-supplied fields. Because there's no server-side session, signing out is purely client-side (`useGoogleAuth`'s `signOut`, which clears local state and calls `google.accounts.id.disableAutoSelect()`) and a page refresh clears the signed-in state — the user signs in again via the GSI button.
+
+This mirrors the middleware-based approach in [RecipeDex](https://github.com/edgorman/RecipeDex/blob/develop/backend/internal/service/fastapi/middleware/authenticate.py), generalized to a `google` auth provider (RecipeDex uses `firebase`) via the same `Authorization` / `Authorization-Provider` header convention and provider-dispatch pattern, so adding another provider later is a matter of extending `AuthProvider` and the `match` in `AuthenticateBackend.authenticate`, not restructuring the auth flow.
 
 ## 1. Create an OAuth 2.0 client ID
 
@@ -43,4 +46,4 @@ A single OAuth client ID (with authorized origins for both dev and prod) is defi
 
 Copy `.env.example` to `.env` in both `services/backend/` and `services/frontend/` and fill in `SERVICE__AUTH__GOOGLE__CLIENT_ID` / `VITE_GOOGLE_CLIENT_ID` with the same client ID (make sure `http://localhost:3000` is one of its authorized JavaScript origins).
 
-If the client ID is left unset, the frontend shows a "Google sign-in is not configured" message instead of a button, and the backend returns `500` from `/api/v1/auth/google`.
+If the client ID is left unset, the frontend shows a "Google sign-in is not configured" message instead of a button, and any authenticated request (one carrying `Authorization`/`Authorization-Provider` headers) gets a `500` from the middleware.

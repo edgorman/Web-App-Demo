@@ -1,12 +1,18 @@
 """User object model."""
-from typing import Optional
 from pydantic import BaseModel
 
 
 class User(BaseModel):
-    """Authenticated user profile, sourced from a verified Google ID token."""
+    """Authenticated user profile, sourced from a verified auth provider token."""
 
     id: str
     email: str
     name: str
-    picture: Optional[str] = None
+
+    @property
+    def is_authenticated(self) -> bool:
+        return True
+
+    @property
+    def display_name(self) -> str:
+        return self.name

@@ -8,13 +8,13 @@ function Home() {
   const [data, setData] = useState<ApiResponse<Message> | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const { user, error: authError, ready, renderButton, signOut } = useGoogleAuth()
+  const { user, authHeaders, error: authError, ready, renderButton, signOut } = useGoogleAuth()
 
   useEffect(() => {
     const fetchData = async () => {
       try {
         setLoading(true)
-        const response = await fetchFromBackend<Message>('/api/v1/hello')
+        const response = await fetchFromBackend<Message>('/api/v1/hello', { headers: authHeaders })
         setData(response)
         setError(null)
       } catch (err) {
@@ -26,7 +26,7 @@ function Home() {
     }
 
     fetchData()
-  }, [])
+  }, [authHeaders])
 
   return (
     <div className="home-container">
@@ -36,20 +36,11 @@ function Home() {
       <div style={{ marginTop: '2rem' }}>
         <h2>Sign in</h2>
         {user ? (
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-            {user.picture && (
-              <img
-                src={user.picture}
-                alt={user.name}
-                style={{ width: 40, height: 40, borderRadius: '50%' }}
-              />
-            )}
-            <div>
-              <p style={{ margin: 0 }}>
-                Signed in as <strong>{user.name}</strong> ({user.email})
-              </p>
-              <button onClick={signOut}>Sign out</button>
-            </div>
+          <div>
+            <p style={{ margin: 0 }}>
+              Signed in as <strong>{user.name}</strong> ({user.email})
+            </p>
+            <button onClick={signOut}>Sign out</button>
           </div>
         ) : (
           <>
