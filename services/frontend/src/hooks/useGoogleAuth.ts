@@ -17,7 +17,11 @@ function decodeCredential(credential: string): User {
   // JWT payloads are base64url-encoded (`-`/`_`, no padding); atob() only
   // understands standard base64 (`+`/`/`), so translate before decoding.
   const base64 = credential.split('.')[1].replace(/-/g, '+').replace(/_/g, '/')
-  const payload = JSON.parse(atob(base64))
+  // atob() returns a byte-per-character (Latin-1) string, which corrupts
+  // multi-byte UTF-8 characters (e.g. accented or non-Latin names) if
+  // parsed directly — decode the raw bytes as UTF-8 instead.
+  const bytes = Uint8Array.from(atob(base64), (c) => c.charCodeAt(0))
+  const payload = JSON.parse(new TextDecoder().decode(bytes))
   return {
     id: payload.sub,
     email: payload.email,
