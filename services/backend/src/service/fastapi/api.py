@@ -3,18 +3,20 @@ import uvicorn
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from src.service.api import APIServiceInterface
-from src.service.fastapi.resources.v1 import hello
+from src.service.fastapi.resources.v1 import auth, hello
 from src.config.service import FastAPIServiceConfig
 
 
 class FastAPIService(APIServiceInterface):
     """FastAPI implementation of the API interface."""
 
-    def __init__(self, config: FastAPIServiceConfig):
+    def __init__(self, config: FastAPIServiceConfig, google_client_id: str = ""):
         """Initialize FastAPI service.
 
         Args:
             config: FastAPI service configuration
+            google_client_id: Google OAuth 2.0 client ID used to verify
+                Google Sign-In ID tokens
         """
         self.config = config
         self.app = FastAPI(
@@ -33,6 +35,9 @@ class FastAPIService(APIServiceInterface):
 
         # Include routers with /api/v1 prefix
         self.app.include_router(hello.router, prefix="/api/v1", tags=["hello"])
+        self.app.include_router(
+            auth.build_router(google_client_id), prefix="/api/v1", tags=["auth"]
+        )
 
     def run(self, host: str = None, port: int = None, reload: bool = None):
         """Run the FastAPI server.

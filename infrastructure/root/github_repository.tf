@@ -71,3 +71,9 @@ resource "github_actions_variable" "root_project_id" {
   variable_name = "ROOT_PROJECT_ID"
   value         = var.gcp_provider_project_id
 }
+
+resource "github_actions_variable" "google_client_id" {
+  repository    = github_repository.repository.name
+  variable_name = "GOOGLE_CLIENT_ID"
+  value         = var.google_client_id
+}

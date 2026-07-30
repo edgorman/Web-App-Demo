@@ -14,7 +14,7 @@ def cli():
 def run():
     """Run the backend service."""
     config = ServiceConfig()
-    service = FastAPIService(config.fastapi)
+    service = FastAPIService(config.fastapi, config.auth.google.client_id)
     service.run()
 
 

@@ -13,6 +13,8 @@ dependencies = [
     "click",
     "pydantic",
     "pydantic-settings",
+    "google-auth",
+    "requests",
 ]
 
 [project.optional-dependencies]

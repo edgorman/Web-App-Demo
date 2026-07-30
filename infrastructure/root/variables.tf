@@ -57,3 +57,9 @@ variable "github_env_branches" {
   type        = list(string)
   default     = ["main", "develop"]
 }
+
+variable "google_client_id" {
+  description = "Google OAuth 2.0 client ID used by the frontend for Google Sign-In (see https://developers.google.com/identity/gsi/web/guides/get-google-api-clientid)"
+  type        = string
+  default     = ""
+}

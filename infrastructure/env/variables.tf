@@ -92,3 +92,9 @@ variable "frontend_max_instances" {
   type        = number
   default     = 10
 }
+
+variable "google_client_id" {
+  description = "Google OAuth 2.0 client ID used by the backend to verify Google Sign-In ID tokens (see https://developers.google.com/identity/gsi/web/guides/get-google-api-clientid)"
+  type        = string
+  default     = ""
+}

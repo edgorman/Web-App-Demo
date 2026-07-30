@@ -109,6 +109,7 @@ make test
 ## API Endpoints
 
 - `GET /api/v1/hello` - Returns a welcome message
+- `POST /api/v1/auth/google` - Verifies a Google Identity Services ID token and returns the authenticated user. See [Google Sign-In](../../documentation/services/google-sign-in.md).
 
 ## Configuration
 
@@ -117,3 +118,5 @@ Configuration is managed through environment variables. Copy `.env.example` to `
 ```bash
 cp .env.example .env
 ```
+
+- `SERVICE__AUTH__GOOGLE__CLIENT_ID` - Google OAuth 2.0 client ID used to verify Google Sign-In ID tokens (see [Google Sign-In](../../documentation/services/google-sign-in.md))
