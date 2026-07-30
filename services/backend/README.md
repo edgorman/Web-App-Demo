@@ -14,6 +14,7 @@ services/backend/
 │   ├── objects/          # Pydantic models for data objects
 │   ├── service/          # Service layer with API interface
 │   │   └── fastapi/      # FastAPI implementation
+│   │       ├── middleware/    # e.g. authenticate.py
 │   │       └── resources/v1/  # API endpoints grouped by version
 │   └── storage/          # Storage layer (for future DB integration)
 ├── tests/                # Tests mirroring src/ structure
@@ -108,7 +109,11 @@ make test
 
 ## API Endpoints
 
-- `GET /api/v1/hello` - Returns a welcome message
+- `GET /api/v1/hello` - Returns a welcome message, personalized if the caller is authenticated
+
+## Authentication
+
+Authentication is enforced by middleware (`src/service/fastapi/middleware/authenticate.py`), not a dedicated endpoint: requests carrying `Authorization: Bearer <token>` and `Authorization-Provider: google` headers are verified per-request and resolved to a `User` on `request.user`; requests without those headers are treated as anonymous. See [Google Sign-In](../../documentation/services/google-sign-in.md).
 
 ## Configuration
 
@@ -117,3 +122,5 @@ Configuration is managed through environment variables. Copy `.env.example` to `
 ```bash
 cp .env.example .env
 ```
+
+- `SERVICE__AUTH__GOOGLE__CLIENT_ID` - Google OAuth 2.0 client ID used to verify Google Sign-In ID tokens (see [Google Sign-In](../../documentation/services/google-sign-in.md))

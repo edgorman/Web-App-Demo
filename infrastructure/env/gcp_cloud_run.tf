@@ -16,6 +16,11 @@ resource "google_cloud_run_v2_service" "backend" {
         value = jsonencode(google_cloud_run_v2_service.frontend.urls)
       }
 
+      env {
+        name  = "SERVICE__AUTH__GOOGLE__CLIENT_ID"
+        value = var.google_client_id
+      }
+
       ports {
         container_port = var.backend_port
       }

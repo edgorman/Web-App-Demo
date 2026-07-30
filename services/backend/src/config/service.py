@@ -1,6 +1,7 @@
 """Service configuration module using pydantic settings."""
 from pydantic import BaseModel
 from pydantic_settings import BaseSettings, SettingsConfigDict
+from src.config.auth import AuthConfig
 
 
 class CORSConfig(BaseModel):
@@ -35,3 +36,4 @@ class ServiceConfig(BaseSettings):
     )
 
     fastapi: FastAPIServiceConfig = FastAPIServiceConfig()
+    auth: AuthConfig = AuthConfig()

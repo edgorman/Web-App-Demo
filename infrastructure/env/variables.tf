@@ -92,3 +92,9 @@ variable "frontend_max_instances" {
   type        = number
   default     = 10
 }
+
+variable "google_client_id" {
+  description = "Google OAuth 2.0 client ID used by the backend to verify Google Sign-In ID tokens. Defined once in infrastructure/root (see its google_client_id variable) and passed in here as TF_VAR_google_client_id by CI, rather than being duplicated per environment."
+  type        = string
+  default     = ""
+}
