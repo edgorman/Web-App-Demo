@@ -38,6 +38,5 @@ runs:
       working-directory: services/backend
       run: |
         docker build \
-          --build-arg FRONTEND_URL=https://example.com \
           -t web-app-demo-backend:${{ github.sha }} \
           .
