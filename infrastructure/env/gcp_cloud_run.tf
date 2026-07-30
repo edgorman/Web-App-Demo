@@ -13,7 +13,7 @@ resource "google_cloud_run_v2_service" "backend" {
 
       env {
         name  = "SERVICE__FASTAPI__CORS__ALLOW_ORIGINS"
-        value = jsonencode([google_cloud_run_v2_service.frontend.uri])
+        value = jsonencode(google_cloud_run_v2_service.frontend.urls)
       }
 
       ports {
