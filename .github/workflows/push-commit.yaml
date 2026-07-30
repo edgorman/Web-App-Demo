@@ -116,24 +116,10 @@ jobs:
       id-token: write
     steps:
       - uses: actions/checkout@v5
-      - name: Authenticate to Google Cloud
-        uses: google-github-actions/auth@v2
-        with:
-          workload_identity_provider: ${{ vars.WORKLOAD_IDENTITY_PROVIDER }}
-          service_account: ${{ vars.SERVICE_ACCOUNT }}
-      - name: Set up Cloud SDK
-        uses: google-github-actions/setup-gcloud@v2
-      - id: frontend-url
-        uses: ./.github/actions/get-service-url
-        with:
-          project_id: 'web-app-demo-prod'
-          region: 'europe-west1'
-          service_name: 'frontend'
       - uses: ./.github/actions/backend-push-commit
         with:
           project_id: 'web-app-demo-prod'
           region: 'europe-west1'
-          frontend_url: ${{ steps.frontend-url.outputs.url }}
           workload_identity_provider: ${{ vars.WORKLOAD_IDENTITY_PROVIDER }}
           service_account: ${{ vars.SERVICE_ACCOUNT }}
 
@@ -151,24 +137,10 @@ jobs:
       id-token: write
     steps:
       - uses: actions/checkout@v5
-      - name: Authenticate to Google Cloud
-        uses: google-github-actions/auth@v2
-        with:
-          workload_identity_provider: ${{ vars.WORKLOAD_IDENTITY_PROVIDER }}
-          service_account: ${{ vars.SERVICE_ACCOUNT }}
-      - name: Set up Cloud SDK
-        uses: google-github-actions/setup-gcloud@v2
-      - id: frontend-url
-        uses: ./.github/actions/get-service-url
-        with:
-          project_id: 'web-app-demo-dev'
-          region: 'europe-west1'
-          service_name: 'frontend'
       - uses: ./.github/actions/backend-push-commit
         with:
           project_id: 'web-app-demo-dev'
           region: 'europe-west1'
-          frontend_url: ${{ steps.frontend-url.outputs.url }}
           workload_identity_provider: ${{ vars.WORKLOAD_IDENTITY_PROVIDER }}
           service_account: ${{ vars.SERVICE_ACCOUNT }}
 

@@ -11,6 +11,11 @@ resource "google_cloud_run_v2_service" "backend" {
     containers {
       image = var.backend_image
 
+      env {
+        name  = "SERVICE__FASTAPI__CORS__ALLOW_ORIGINS"
+        value = jsonencode([google_cloud_run_v2_service.frontend.uri])
+      }
+
       ports {
         container_port = var.backend_port
       }

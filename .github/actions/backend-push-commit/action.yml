@@ -12,10 +12,6 @@ inputs:
     description: 'Cloud Run service name'
     required: false
     default: 'backend'
-  frontend_url:
-    description: 'Frontend service URL for CORS configuration'
-    required: false
-    default: ''
   workload_identity_provider:
     description: 'The Workload Identity Provider resource name'
     required: true
@@ -26,16 +22,6 @@ inputs:
 runs:
   using: "composite"
   steps:
-    - name: Prepare Docker build arguments
-      id: build-args
-      shell: bash
-      run: |
-        if [ -n "${{ inputs.frontend_url }}" ]; then
-          echo "args=FRONTEND_URL=${{ inputs.frontend_url }}" >> $GITHUB_OUTPUT
-        else
-          echo "args=" >> $GITHUB_OUTPUT
-        fi
-    
     - uses: ./.github/actions/service-push-commit
       with:
         project_id: ${{ inputs.project_id }}
@@ -43,6 +29,5 @@ runs:
         service_name: ${{ inputs.service_name }}
         service_directory: 'services/backend'
         repository_name: 'backend'
-        docker_build_args: ${{ steps.build-args.outputs.args }}
         workload_identity_provider: ${{ inputs.workload_identity_provider }}
         service_account: ${{ inputs.service_account }}
