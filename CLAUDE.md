@@ -12,6 +12,14 @@ Web-App-Demo is a monorepo with a modular structure for deploying independent fe
 
 Deployment target: `develop` branch → dev GCP environment, `main` branch → prod GCP environment.
 
+## Branching and release workflow
+
+All changes are made on feature branches and merged via pull request — never commit directly to `develop` or `main`:
+
+1. Branch off `develop` for new work.
+2. Open a pull request back into `develop`; merging deploys to the dev GCP environment.
+3. Release `develop` to production by opening a pull request from `develop` into `main`; merging deploys to the prod GCP environment.
+
 ## Commands
 
 ### Backend (`services/backend/`)
