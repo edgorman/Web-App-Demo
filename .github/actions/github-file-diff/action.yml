@@ -1,6 +1,11 @@
 name: 'GitHub File Diff'
 description: 'Determines which parts of the infrastructure and services have changed'
 
+inputs:
+  branch_ref:
+    description: 'The branch we are generating a diff against'
+    required: true
+
 outputs:
   infrastructure-root:
     description: 'Whether infrastructure root files changed'
@@ -24,6 +29,7 @@ runs:
     - uses: dorny/paths-filter@v3
       id: filter
       with:
+        base: ${{ inputs.branch_ref }}
         filters: |
           infrastructure-root:
             - 'infrastructure/config/root/**'
