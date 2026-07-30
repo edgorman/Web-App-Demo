@@ -19,14 +19,15 @@ This mirrors the middleware-based approach in [RecipeDex](https://github.com/edg
 
 Follow [Get your Google API client ID](https://developers.google.com/identity/gsi/web/guides/get-google-api-clientid):
 
-1. Open the [Google Cloud Console credentials page](https://console.cloud.google.com/apis/credentials) for the GCP project you want to associate the login with (this can be a separate project from `web-app-demo-dev` / `web-app-demo-prod`).
+1. Open the [Google Cloud Console credentials page](https://console.cloud.google.com/apis/credentials) for the `web-app-demo-root` GCP project — since the client ID is defined once in `infrastructure/root` and reused by every environment (see below), it should be created there too, not in `web-app-demo-dev` / `web-app-demo-prod`.
 2. Configure the OAuth consent screen if you haven't already.
 3. Click **Create Credentials** > **OAuth client ID**, choose **Web application**.
 4. Add each frontend URL that will render the sign-in button under **Authorized JavaScript origins**, e.g.:
    - `http://localhost:3000` for local development
    - the dev frontend Cloud Run URL
    - the prod frontend Cloud Run URL
-5. Save and copy the generated **Client ID** (the client secret is not needed — GSI's ID-token flow only uses the client ID).
+5. Leave **Authorized redirect URIs** empty — it doesn't apply here. That field is for OAuth 2.0 authorization-code/redirect flows; GSI's ID-token flow (`google.accounts.id`, what this app uses) returns the credential straight to the page's JS callback via a popup/One Tap, with no server-side redirect involved.
+6. Save and copy the generated **Client ID** (the client secret is not needed — GSI's ID-token flow only uses the client ID).
 
 ## 2. Configure the client ID
 
