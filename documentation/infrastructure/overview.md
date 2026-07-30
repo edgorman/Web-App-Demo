@@ -27,7 +27,7 @@ The `infrastructure/env/` directory contains environment-specific resources:
 - **Service IAM Policies**: Access control for individual service invocation
 - **Configuration**: Environment-specific variables and scaling settings
 
-Note: Project-level IAM permissions for the GitHub Actions service account are managed centrally in the root project (`infrastructure/root/gcp_env_iam.tf`).
+Note: Project-level IAM permissions for the GitHub Actions service account are managed centrally in the root project (`infrastructure/root/github_cicd.tf`).
 
 ### Access Control Model
 
@@ -42,5 +42,5 @@ See [Backend Service Deployment](../services/backend-deployment.md) for details 
 
 ## Security Model
 - **Workload Identity Federation**: No long-lived GCP service account keys are used. GitHub Actions authenticates via OIDC.
-- **Least Privilege**: The GitHub Actions service account is created in the root project, and the root project grants it `Editor` and `Cloud Run Admin` roles on all environment projects. The `Cloud Run Admin` role is required to manage IAM policies for Cloud Run services, such as enabling public access. This centralized permission management ensures that the service account has the necessary permissions before Terraform attempts to manage resources in environment projects.
+- **Least Privilege**: The GitHub Actions service account is created in the root project, and the root project grants it the `roles/admin` role on all environment projects (root, dev, prod). This role is required to manage IAM policies for Cloud Run services, such as configuring service-to-service invocation. This centralized permission management ensures that the service account has the necessary permissions before Terraform attempts to manage resources in environment projects.
 - **Cloud Run Service Accounts**: Each Cloud Run service uses a custom service account instead of the default Compute Engine service account. This follows GCP best practices and the principle of least privilege by ensuring each service has only the minimum permissions required for its operation.

@@ -12,6 +12,14 @@ Web-App-Demo is a monorepo with a modular structure for deploying independent fe
 
 Deployment target: `develop` branch → dev GCP environment, `main` branch → prod GCP environment.
 
+## Branching and release workflow
+
+All changes are made on feature branches and merged via pull request — never commit directly to `develop` or `main`:
+
+1. Branch off `develop` for new work.
+2. Open a pull request back into `develop`; merging deploys to the dev GCP environment.
+3. Release `develop` to production by opening a pull request from `develop` into `main`; merging deploys to the prod GCP environment.
+
 ## Commands
 
 ### Backend (`services/backend/`)
@@ -122,7 +130,7 @@ infrastructure/
 └── root/                     # admin/root project (Makefile, providers.tf, variables.tf, ...)
 ```
 
-- **Root project** (`web-app-demo-root`): Terraform state buckets for all projects, Workload Identity Federation, the GitHub Actions service account, and GitHub repo/variable management. Project-level IAM grants to environment projects (`Editor`, `Cloud Run Admin`) are defined here, not in `env/`.
+- **Root project** (`web-app-demo-root`): Terraform state buckets for all projects, Workload Identity Federation, the GitHub Actions service account, and GitHub repo/variable management. Project-level IAM grants to environment projects (`roles/admin`) are defined here, not in `env/`.
 - **Environment projects** (`web-app-demo-dev`, `web-app-demo-prod`): Cloud Run services, Artifact Registry, per-service custom service accounts and IAM. `infrastructure/config/{dev,prod,root}/` holds the corresponding `terraform.tfvars`/`terraform.tfbackend`.
 - **Access control model**: frontend Cloud Run service is public (`allUsers` → `roles/run.invoker`); backend Cloud Run service is restricted so only the frontend's service account can invoke it — the backend is never publicly reachable. See `documentation/infrastructure/overview.md` and `documentation/services/backend-deployment.md`.
 - Authentication throughout CI/CD is via Workload Identity Federation (OIDC) — no long-lived GCP service account keys.

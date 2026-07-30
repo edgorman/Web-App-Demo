@@ -53,4 +53,4 @@ src/
 
 Environment variables can be configured in `.env` file (see `.env.example`):
 
-- `VITE_API_URL` - Backend API URL
+- `VITE_BACKEND_URL` - Backend API URL
