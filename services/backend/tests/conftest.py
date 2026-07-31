@@ -1,10 +1,11 @@
 """Shared pytest fixtures."""
+from unittest.mock import MagicMock
 import pytest
 from fastapi.testclient import TestClient
 from src.config.auth import AuthConfig, GoogleAuthConfig
 from src.config.service import ServiceConfig, FastAPIServiceConfig, CORSConfig
 from src.service.fastapi.api import FastAPIService
-from tests.fakes import InMemoryUserStorage
+from src.storage.user import UserStorage
 
 
 @pytest.fixture
@@ -24,8 +25,17 @@ def service_config():
 
 @pytest.fixture
 def user_storage():
-    """Create an in-memory user storage instance for tests."""
-    return InMemoryUserStorage()
+    """Create a mock user storage for tests.
+
+    `get` defaults to returning None (no stored user yet); `create`/`update` default to
+    returning whatever user they were called with, so callers get a realistic value back
+    without needing to configure it in every test.
+    """
+    storage = MagicMock(spec=UserStorage)
+    storage.get.return_value = None
+    storage.create.side_effect = lambda user: user
+    storage.update.side_effect = lambda user: user
+    return storage
 
 
 @pytest.fixture
