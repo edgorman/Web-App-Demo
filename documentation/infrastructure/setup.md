@@ -51,7 +51,13 @@ terraform apply
 - **Grants IAM Permissions**: Assigns the `roles/admin` role to the GitHub Actions service account on all environment projects.
 - **Wires GitHub Variables**: Automatically populates `WORKLOAD_IDENTITY_PROVIDER` and `SERVICE_ACCOUNT` into your GitHub repository settings.
 
-## 6. Start Making PRs
+## 6. Configure the Google Sign-In Client
+The frontend's "Sign in with Google" button needs an OAuth 2.0 client ID, defined once in the root project and reused by both dev and prod.
+- Follow [Google Sign-In](../services/google-sign-in.md) end-to-end: create the OAuth client ID in the `web-app-demo-root` GCP project's [credentials page](https://console.cloud.google.com/apis/credentials), then set `google_client_id` in `infrastructure/root/variables.tf` (or `infrastructure/config/root/terraform.tfvars`) and re-apply `infrastructure/root`.
+- That apply wires the client ID into a `GOOGLE_CLIENT_ID` GitHub Actions repository variable, which CI then passes to both the backend and frontend builds for dev and prod automatically — no further per-environment configuration is needed.
+- This step can be done any time after the bootstrap in Step 5, since it requires the root project (and its credentials page) to already exist.
+
+## 7. Start Making PRs
 Once the bootstrap is complete, the GitHub CI/CD is fully functional. 
 - You can now create a new branch, make changes to `infrastructure/env` or `infrastructure/root`, and open a Pull Request.
 - The `pull-request` workflow will automatically run plans using the newly created identity.

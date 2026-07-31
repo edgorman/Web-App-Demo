@@ -20,6 +20,8 @@ All changes are made on feature branches and merged via pull request — never c
 2. Open a pull request back into `develop`; merging deploys to the dev GCP environment.
 3. Release `develop` to production by opening a pull request from `develop` into `main`; merging deploys to the prod GCP environment.
 
+`develop` is the default base for all new work — always branch off and target `develop`, never `main`. `main` only receives changes via a release PR from `develop` (step 3); it is not a base for feature branches.
+
 ## Commands
 
 ### Backend (`services/backend/`)
