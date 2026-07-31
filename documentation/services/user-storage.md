@@ -17,7 +17,7 @@ This mirrors the storage split in [RecipeDex](https://github.com/edgorman/Recipe
 | Env var | Purpose |
 | --- | --- |
 | `SERVICE__STORAGE__FIRESTORE__PROJECT_ID` | GCP project ID for Firestore. Left empty in `terraform.tfvars`-driven deployments — Terraform sets it explicitly per environment (see below); locally, leave it empty to fall back to the project from Application Default Credentials. |
-| `SERVICE__STORAGE__FIRESTORE__DATABASE` | Firestore database ID. Deployed environments use `<project-id>-database`; local development can point at any database you have access to, including the [Firestore emulator](https://firebase.google.com/docs/emulator-suite/connect_firestore). |
+| `SERVICE__STORAGE__FIRESTORE__DATABASE` | Firestore database ID. Deployed environments use `<project-id>-database`, never the literal `(default)` name. Left empty locally, the Firestore client falls back to its own default (`(default)`); local development can instead point at any database you have access to, including the [Firestore emulator](https://firebase.google.com/docs/emulator-suite/connect_firestore). |
 
 ### Deployed environments (dev/prod)
 
@@ -31,4 +31,4 @@ The backend's Cloud Run service account (`backend-sa`) is granted `roles/datasto
 
 Copy `.env.example` to `.env` in `services/backend/` and, if needed, fill in `SERVICE__STORAGE__FIRESTORE__PROJECT_ID` / `SERVICE__STORAGE__FIRESTORE__DATABASE`. Running the service locally against real Firestore requires [Application Default Credentials](https://cloud.google.com/docs/authentication/external/set-up-adc) (`gcloud auth application-default login`) with access to the target project; without them, `FirestoreClient` construction fails immediately on startup with `DefaultCredentialsError`.
 
-Tests never touch real Firestore: `tests/fakes.py`'s `InMemoryUserStorage` implements the same `UserStorage` interface and is injected via the `user_storage` / `fastapi_service` fixtures in `tests/conftest.py`.
+Tests never touch real Firestore: `tests/conftest.py`'s `user_storage` fixture is a `MagicMock(spec=UserStorage)`, injected via the `user_storage` / `fastapi_service` fixtures.
