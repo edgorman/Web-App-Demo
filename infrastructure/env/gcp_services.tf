@@ -1,7 +1,8 @@
 resource "google_project_service" "env_services" {
   for_each = toset([
     "run.googleapis.com",
-    "artifactregistry.googleapis.com"
+    "artifactregistry.googleapis.com",
+    "firestore.googleapis.com"
   ])
 
   project = var.project_id

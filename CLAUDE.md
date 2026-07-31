@@ -91,7 +91,7 @@ services/backend/
 - `src/config/service.py` uses pydantic-settings (`ServiceConfig`), reading `.env` with `SERVICE__<section>__<field>` env vars (e.g. `SERVICE__FASTAPI__CORS__ALLOW_ORIGINS`) — double underscores separate nesting levels. Use `.env.example` as the template for new variables.
 - `src/objects/` holds pydantic data models (e.g. `Message`) — one object per file.
 - `src/service/fastapi/resources/v1/` holds versioned route modules, each exposing an `APIRouter` mounted under `/api/v1` in `FastAPIService.__init__`. All responses wrap the payload in the generic `Response[DataT]` model from `resources/v1/_objects.py` (adds `timestamp`, `success`, `message`).
-- `src/storage/` is reserved for a future persistence layer: an abstract interface at the top level (e.g. `storage/foobar.py`) with concrete backends in subdirectories (e.g. `storage/psql/foobar.py`), mirroring the `service/api.py` vs `service/fastapi/api.py` split. Storage files manage reading/writing of the pydantic object classes.
+- `src/storage/` is reserved for a future persistence layer: an abstract interface at the top level (e.g. `storage/foobar.py`) with concrete backends in subdirectories (e.g. `storage/firestore/foobar.py`), mirroring the `service/api.py` vs `service/fastapi/api.py` split. Storage files manage reading/writing of the pydantic object classes.
 - `tests/` mirrors `src/` 1:1; shared fixtures (`service_config`, `fastapi_service`, `test_client`) live in `tests/conftest.py`.
 
 New backend code should follow this same interface-then-implementation pattern rather than adding logic directly to route handlers or the FastAPI class.
