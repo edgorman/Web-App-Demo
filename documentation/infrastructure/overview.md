@@ -52,7 +52,7 @@ If the backend must not be publicly reachable, the frontend has to stop calling
 it from the browser — e.g. by having nginx proxy `/api` and attaching an identity
 token, or by putting both services behind a load balancer with IAP.
 
-See [Backend Service Deployment](../services/backend-deployment.md) for details on the backend Cloud Run service.
+See [Backend Service Deployment](../services/backend-deployment.md) and [Frontend Service Deployment](../services/frontend-deployment.md) for details on each Cloud Run service.
 
 ## Security Model
 - **Workload Identity Federation**: No long-lived GCP service account keys are used. GitHub Actions authenticates via OIDC.
