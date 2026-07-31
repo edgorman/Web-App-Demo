@@ -9,6 +9,7 @@ Triggered on PRs to `main` and `develop`.
 - **Dynamic Diffing**: Uses a centralized diff action to determine which infrastructure components (root, dev, or prod) were modified.
 - **Validation**: Performs `terraform init`, `fmt`, `validate`, and `plan` for the modified directories.
 - **Cross-Environment Safety**: `dev` and `prod` plans run if environment files change, but they also wait for the `root` job if root files are modified in the same PR.
+- **Cross-Environment Warning**: If a PR modifies `infrastructure/root` at the same time as the `infrastructure/env` resources it manages (dev or prod, depending on the PR's base branch), a warning comment is posted on the PR recommending the changes be split into separate pull requests.
 
 ### 2. Push Commit (`push-commit.yaml`)
 Triggered on merges to `main` and `develop`.

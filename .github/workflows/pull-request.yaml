@@ -26,6 +26,35 @@ jobs:
         with: 
           branch_ref: ${{ github.base_ref }}
 
+  infrastructure-warning:
+    needs: diff
+    if: |
+      needs.diff.outputs.infrastructure-root == 'true' && (
+        (github.base_ref == 'develop' && needs.diff.outputs.infrastructure-dev == 'true') ||
+        (github.base_ref == 'main' && needs.diff.outputs.infrastructure-prod == 'true')
+      )
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+    steps:
+      - uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const output = `### ⚠️ Infrastructure Warning
+
+            This pull request changes \`infrastructure/root\` at the same time as the \`infrastructure/env\` (dev/prod) resources it manages. Applying root and environment changes together in a single PR can cause issues, since environment resources may depend on root resources (e.g. state buckets, Workload Identity Federation, IAM) being applied first.
+
+            Please split these into separate pull requests: one for \`infrastructure/root\`, and a follow-up for the environment changes.`;
+
+            await github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: output
+            });
+
   infrastructure-root:
     needs: diff
     if: needs.diff.outputs.infrastructure-root == 'true' && (github.base_ref == 'main' || github.base_ref == 'develop')
