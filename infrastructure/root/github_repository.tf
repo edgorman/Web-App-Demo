@@ -7,6 +7,14 @@ resource "github_repository" "repository" {
   name                   = var.github_repository_name
   description            = "A demo repository for a web app"
   delete_branch_on_merge = true
+
+  # Must stay in sync with the `allowed_merge_methods` used by the branch
+  # rulesets below ("merge" for main, "squash" for develop) - a merge method
+  # allowed by a ruleset but disabled here causes the merge button to fail
+  # with a GraphQL "invalid value" error on $mergeMethod.
+  allow_merge_commit = true
+  allow_squash_merge = true
+  allow_rebase_merge = false
 }
 
 resource "github_branch" "env_branches" {
@@ -70,4 +78,10 @@ resource "github_actions_variable" "root_project_id" {
   repository    = github_repository.repository.name
   variable_name = "ROOT_PROJECT_ID"
   value         = var.gcp_provider_project_id
+}
+
+resource "github_actions_variable" "google_client_id" {
+  repository    = github_repository.repository.name
+  variable_name = "GOOGLE_CLIENT_ID"
+  value         = var.google_client_id
 }

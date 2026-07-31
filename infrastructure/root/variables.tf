@@ -57,3 +57,9 @@ variable "github_env_branches" {
   type        = list(string)
   default     = ["main", "develop"]
 }
+
+variable "google_client_id" {
+  description = "Google OAuth 2.0 client ID for Google Sign-In (see https://developers.google.com/identity/gsi/web/guides/get-google-api-clientid), defined once here and propagated via the GOOGLE_CLIENT_ID GitHub Actions variable to both the backend (infrastructure/env, as TF_VAR_google_client_id) and the frontend Docker build (VITE_GOOGLE_CLIENT_ID) for every environment"
+  type        = string
+  default     = "207361768064-d094jlosoofs32qili7r290quc02h4mn.apps.googleusercontent.com" # from manually configuring in GCP.
+}

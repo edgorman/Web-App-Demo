@@ -7,15 +7,17 @@ import { ApiResponse } from '../types/models'
 /**
  * Fetches data from the backend API
  * @param endpoint - The API endpoint to call (e.g., '/api/v1/hello')
+ * @param options - Optional fetch options (method, headers, body, etc.)
  * @returns The API response
  */
 export async function fetchFromBackend<T>(
-  endpoint: string
+  endpoint: string,
+  options?: RequestInit
 ): Promise<ApiResponse<T>> {
   const url = `${config.backendUrl}${endpoint}`
 
   try {
-    const response = await fetch(url)
+    const response = await fetch(url, options)
 
     if (!response.ok) {
       const errorBody = await response.text().catch(() => 'No error details')

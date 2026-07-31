@@ -41,8 +41,19 @@ Or using npm directly:
 ```
 src/
 ├── components/
+│   ├── common/
+│   │   └── GoogleSignInButton.tsx
 │   └── pages/
 │       └── Home.tsx
+├── hooks/
+│   └── useGoogleAuth.ts
+├── services/
+│   └── api.ts
+├── types/
+│   ├── google.d.ts
+│   └── models.ts
+├── config/
+│   └── app.ts
 ├── App.tsx
 ├── main.tsx
 ├── App.css
@@ -54,3 +65,4 @@ src/
 Environment variables can be configured in `.env` file (see `.env.example`):
 
 - `VITE_BACKEND_URL` - Backend API URL
+- `VITE_GOOGLE_CLIENT_ID` - Google OAuth 2.0 client ID used for Google Sign-In (see [Google Sign-In](../../documentation/services/google-sign-in.md))
