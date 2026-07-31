@@ -40,12 +40,18 @@ resource "github_repository_ruleset" "branch_rulesets" {
   target      = "branch"
 
   rules {
-    creation                = true
-    update                  = false
-    deletion                = true
-    required_signatures     = true
-    non_fast_forward        = true
-    required_linear_history = true
+    creation            = true
+    update              = false
+    deletion            = true
+    required_signatures = true
+    non_fast_forward    = true
+
+    # Merge commits (main's only allowed merge method) have two parents,
+    # which is exactly what "required linear history" forbids - so it can
+    # only apply to develop, whose squash-only merges stay linear. Enabling
+    # it for main made every merge into main fail with a GraphQL
+    # "invalid value" error on $mergeMethod.
+    required_linear_history = each.value != var.github_default_branch
 
     pull_request {
       dismiss_stale_reviews_on_push     = true

@@ -40,7 +40,8 @@ nginx proxy `/api` with an identity token attached).
 ### Terraform Configuration
 Located in `infrastructure/env/`:
 - `gcp_cloud_run.tf` - Cloud Run service and IAM configuration
-- `gcp_service_account.tf` - Custom service account for the backend service
+- `gcp_service_account.tf` - Custom service account for the backend service, including its Firestore IAM grant
+- `gcp_firestore.tf` - Firestore (Native mode) database used by the backend's user storage
 - `variables.tf` - Input variables
 - `outputs.tf` - Service URL, name, and service account outputs
 - `providers.tf` - Provider configuration
@@ -197,7 +198,7 @@ Development environment with min_instances=0 only incurs costs during active use
 
 ### Service Account
 The backend service uses a dedicated custom service account (`backend-sa`) instead of the default Compute Engine service account. This follows the principle of least privilege and GCP security best practices:
-- No additional IAM role bindings are required as the backend is a stateless FastAPI application
+- The service account is granted `roles/datastore.user` on the project, so the backend can read and write its Firestore-backed user storage (see [User Storage](../services/user-storage.md)) — this is the only additional IAM role binding it holds
 - The service account is used solely to run the Cloud Run service
 - This eliminates security warnings about using the default service account with broad IAM permissions
 
