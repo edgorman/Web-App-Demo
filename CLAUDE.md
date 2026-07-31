@@ -83,7 +83,7 @@ services/backend/
 │   │       ├── api.py             # FastAPIService, implements APIServiceInterface
 │   │       ├── middleware/        # e.g. auth.py, cors.py
 │   │       └── resources/v1/      # one router module per resource
-│   └── storage/                   # persistence interfaces + backends (e.g. psql/)
+│   └── storage/                   # persistence interfaces + backends (e.g. firestore/)
 └── tests/                         # mirrors src/ 1:1, plus conftest.py
 ```
 
