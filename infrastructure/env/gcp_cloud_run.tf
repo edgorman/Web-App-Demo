@@ -47,9 +47,17 @@ resource "google_cloud_run_v2_service" "backend" {
 
   # Ignore changes to the image after the service is created
   # as it will be updated via GitHub Actions
+  #
+  # client/client_version are also ignored: the deploy step in
+  # service-push-commit runs `gcloud run deploy` to roll out the new image,
+  # which stamps these fields onto the service. Since they aren't set in
+  # this config, Terraform would otherwise want to null them out on every
+  # subsequent plan/apply even though nothing meaningful changed.
   lifecycle {
     ignore_changes = [
-      template[0].containers[0].image
+      template[0].containers[0].image,
+      client,
+      client_version,
     ]
   }
 }
@@ -133,9 +141,17 @@ resource "google_cloud_run_v2_service" "frontend" {
 
   # Ignore changes to the image after the service is created
   # as it will be updated via GitHub Actions
+  #
+  # client/client_version are also ignored: the deploy step in
+  # service-push-commit runs `gcloud run deploy` to roll out the new image,
+  # which stamps these fields onto the service. Since they aren't set in
+  # this config, Terraform would otherwise want to null them out on every
+  # subsequent plan/apply even though nothing meaningful changed.
   lifecycle {
     ignore_changes = [
-      template[0].containers[0].image
+      template[0].containers[0].image,
+      client,
+      client_version,
     ]
   }
 }
