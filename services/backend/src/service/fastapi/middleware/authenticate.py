@@ -14,6 +14,7 @@ from src.config.auth import (
     AuthProvider,
 )
 from src.objects.user import User
+from src.storage.user import UserStorage
 
 
 class AuthError(AuthenticationError):
@@ -28,8 +29,9 @@ class AuthError(AuthenticationError):
 class AuthenticateBackend(AuthenticationBackend):
     """Verifies a bearer token from a supported provider and resolves it to a User."""
 
-    def __init__(self, google_client_id: str):
+    def __init__(self, google_client_id: str, user_storage: UserStorage):
         self.__google_client_id = google_client_id
+        self.__user_storage = user_storage
 
     async def authenticate(self, connection: HTTPConnection) -> tuple[AuthCredentials, User] | None:
         if AUTHORIZATION_HEADER not in connection.headers:
@@ -60,7 +62,7 @@ class AuthenticateBackend(AuthenticationBackend):
             case _:
                 raise AuthError(501, f"Provider `{provider.value}` has not been implemented.")
 
-        return AuthCredentials([AUTHENTICATED_SCOPE]), self._get_user(provider_data)
+        return AuthCredentials([AUTHENTICATED_SCOPE]), self._store_user(self._get_user(provider_data))
 
     def _auth_google(self, token: str) -> dict:
         if not self.__google_client_id:
@@ -80,17 +82,24 @@ class AuthenticateBackend(AuthenticationBackend):
             name=provider_data.get("name", provider_data["email"]),
         )
 
+    def _store_user(self, user: User) -> User:
+        """Create or refresh the user's persisted profile on each successful login."""
+        if self.__user_storage.get(user.id) is None:
+            return self.__user_storage.create(user)
+        return self.__user_storage.update(user)
+
     @staticmethod
     def on_error(connection: HTTPConnection, exception: AuthError) -> Response:
         return JSONResponse(status_code=exception.status_code, content={"detail": exception.detail})
 
 
-def add_authenticate_middleware(app: FastAPI, google_client_id: str):
+def add_authenticate_middleware(app: FastAPI, google_client_id: str, user_storage: UserStorage):
     """Register the authentication middleware (Google Sign-In, for now).
 
     Args:
         app: FastAPI application to attach the middleware to
         google_client_id: OAuth 2.0 client ID used to verify Google ID tokens
+        user_storage: Storage backend used to persist authenticated users
     """
-    backend = AuthenticateBackend(google_client_id=google_client_id)
+    backend = AuthenticateBackend(google_client_id=google_client_id, user_storage=user_storage)
     app.add_middleware(AuthenticationMiddleware, backend=backend, on_error=backend.on_error)

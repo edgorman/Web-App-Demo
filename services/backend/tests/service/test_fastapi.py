@@ -3,11 +3,12 @@ from fastapi.testclient import TestClient
 from src.config.auth import AuthConfig, GoogleAuthConfig
 from src.service.fastapi.api import FastAPIService
 from src.service.fastapi.middleware import authenticate as authenticate_middleware
+from tests.fakes import InMemoryUserStorage
 
 
 def test_fastapi_service_initialization(service_config):
     """Test FastAPI service initialization."""
-    service = FastAPIService(service_config)
+    service = FastAPIService(service_config, InMemoryUserStorage())
     assert service.config == service_config.fastapi
     assert service.app is not None
 
@@ -58,6 +59,38 @@ def test_hello_endpoint_authenticated(test_client, monkeypatch):
     assert response.json()["data"]["message"] == "Hello Test User from the Web-App-Demo backend!"
 
 
+def test_hello_endpoint_authenticated_persists_user(test_client, user_storage, monkeypatch):
+    """Test that a valid bearer token creates the user in storage, then refreshes it on the next login."""
+    def fake_verify_oauth2_token(credential, request, audience):
+        return {"sub": "1234567890", "email": "user@example.com", "name": "Test User"}
+
+    monkeypatch.setattr(authenticate_middleware.google_id_token, "verify_oauth2_token", fake_verify_oauth2_token)
+
+    assert user_storage.get("1234567890") is None
+
+    test_client.get(
+        "/api/v1/hello",
+        headers={"Authorization": "Bearer fake-credential", "Authorization-Provider": "google"},
+    )
+    stored = user_storage.get("1234567890")
+    assert stored is not None
+    assert stored.email == "user@example.com"
+    assert stored.name == "Test User"
+
+    def fake_verify_oauth2_token_updated(credential, request, audience):
+        return {"sub": "1234567890", "email": "user@example.com", "name": "Updated Name"}
+
+    monkeypatch.setattr(
+        authenticate_middleware.google_id_token, "verify_oauth2_token", fake_verify_oauth2_token_updated
+    )
+
+    test_client.get(
+        "/api/v1/hello",
+        headers={"Authorization": "Bearer fake-credential", "Authorization-Provider": "google"},
+    )
+    assert user_storage.get("1234567890").name == "Updated Name"
+
+
 def test_hello_endpoint_invalid_token(test_client, monkeypatch):
     """Test that an invalid Google bearer token is rejected."""
     def fake_verify_oauth2_token(credential, request, audience):
@@ -99,7 +132,7 @@ def test_hello_endpoint_unsupported_provider(test_client):
 def test_hello_endpoint_not_configured(service_config):
     """Test that authentication fails clearly when no client ID is configured."""
     service_config.auth = AuthConfig(google=GoogleAuthConfig(client_id=""))
-    service = FastAPIService(service_config)
+    service = FastAPIService(service_config, InMemoryUserStorage())
     client = TestClient(service.app)
 
     response = client.get(

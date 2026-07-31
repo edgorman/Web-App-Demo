@@ -24,6 +24,7 @@ Services and APIs are managed via a consolidated `all_projects` local in Terrafo
 ## Application Infrastructure
 The `infrastructure/env/` directory contains environment-specific resources:
 - **Cloud Run Services**: Serverless container deployments for the backend and frontend services
+- **Firestore Database**: A per-environment Firestore (Native mode) database backing the backend's user storage — see [User Storage](../services/user-storage.md)
 - **Service IAM Policies**: Access control for individual service invocation
 - **Configuration**: Environment-specific variables and scaling settings
 
