@@ -21,6 +21,16 @@ resource "google_cloud_run_v2_service" "backend" {
         value = var.google_client_id
       }
 
+      env {
+        name  = "SERVICE__STORAGE__FIRESTORE__PROJECT_ID"
+        value = var.project_id
+      }
+
+      env {
+        name  = "SERVICE__STORAGE__FIRESTORE__DATABASE"
+        value = google_firestore_database.database.name
+      }
+
       ports {
         container_port = var.backend_port
       }

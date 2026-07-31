@@ -2,6 +2,7 @@
 from pydantic import BaseModel
 from pydantic_settings import BaseSettings, SettingsConfigDict
 from src.config.auth import AuthConfig
+from src.config.storage import StorageConfig
 
 
 class CORSConfig(BaseModel):
@@ -37,3 +38,4 @@ class ServiceConfig(BaseSettings):
 
     fastapi: FastAPIServiceConfig = FastAPIServiceConfig()
     auth: AuthConfig = AuthConfig()
+    storage: StorageConfig = StorageConfig()

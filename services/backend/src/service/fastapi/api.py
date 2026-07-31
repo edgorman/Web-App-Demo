@@ -6,16 +6,18 @@ from src.service.api import APIServiceInterface
 from src.service.fastapi.middleware.authenticate import add_authenticate_middleware
 from src.service.fastapi.resources.v1 import hello
 from src.config.service import ServiceConfig
+from src.storage.user import UserStorage
 
 
 class FastAPIService(APIServiceInterface):
     """FastAPI implementation of the API interface."""
 
-    def __init__(self, config: ServiceConfig):
+    def __init__(self, config: ServiceConfig, user_storage: UserStorage):
         """Initialize FastAPI service.
 
         Args:
             config: Service configuration
+            user_storage: Storage backend used to persist authenticated users
         """
         self.config = config.fastapi
         self.app = FastAPI(
@@ -24,7 +26,7 @@ class FastAPIService(APIServiceInterface):
         )
 
         # Add authentication middleware (Google Sign-In, for now)
-        add_authenticate_middleware(self.app, config.auth.google.client_id)
+        add_authenticate_middleware(self.app, config.auth.google.client_id, user_storage)
 
         # Add CORS middleware
         self.app.add_middleware(

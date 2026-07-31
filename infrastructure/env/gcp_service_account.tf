@@ -7,6 +7,14 @@ resource "google_service_account" "backend" {
   description  = "Custom service account for the backend Cloud Run service with minimal IAM permissions"
 }
 
+# Grants the backend read/write access to Firestore, so it can persist and
+# look up authenticated users (see services/backend/src/storage/firestore/user.py).
+resource "google_project_iam_member" "backend_firestore_access" {
+  project = var.project_id
+  role    = "roles/datastore.user"
+  member  = "serviceAccount:${google_service_account.backend.email}"
+}
+
 # Service account for the frontend Cloud Run service
 # This replaces the default Compute Engine service account with minimal permissions
 resource "google_service_account" "frontend" {
@@ -16,7 +24,8 @@ resource "google_service_account" "frontend" {
   description  = "Custom service account for the frontend Cloud Run service with minimal IAM permissions"
 }
 
-# Note: No additional IAM role bindings are required for these service accounts
-# as both services are stateless applications that do not access any Google Cloud
-# resources. The service accounts are used solely to run the Cloud Run services
-# with the principle of least privilege.
+# Note: The frontend service account has no additional IAM role bindings, as it
+# is a stateless application that does not access any Google Cloud resources.
+# The backend service account is granted `roles/datastore.user` above for its
+# Firestore-backed user storage; both accounts otherwise run with the minimum
+# permissions needed for their Cloud Run service.
