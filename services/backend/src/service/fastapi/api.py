@@ -4,9 +4,12 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from src.service.api import APIServiceInterface
 from src.service.fastapi.middleware.authenticate import add_authenticate_middleware
-from src.service.fastapi.resources.v1 import hello
+from src.service.fastapi.middleware.authorize import add_authorize_middleware
+from src.service.fastapi.resources.v1 import hello, users
 from src.config.service import ServiceConfig
 from src.storage.user import UserStorage
+
+API_V1_PREFIX = "/api/v1"
 
 
 class FastAPIService(APIServiceInterface):
@@ -25,6 +28,13 @@ class FastAPIService(APIServiceInterface):
             version=self.config.app_version,
         )
 
+        # Expose storage to route handlers via `_dependencies.get_user_storage`
+        self.app.state.user_storage = user_storage
+
+        # Add authorization middleware. Middleware runs in reverse registration order, so
+        # registering this first makes it run after authentication, once `request.user` is set.
+        add_authorize_middleware(self.app, users.authorization_rules(user_storage, prefix=API_V1_PREFIX))
+
         # Add authentication middleware (Google Sign-In, for now)
         add_authenticate_middleware(self.app, config.auth.google.client_id, user_storage)
 
@@ -38,7 +48,8 @@ class FastAPIService(APIServiceInterface):
         )
 
         # Include routers with /api/v1 prefix
-        self.app.include_router(hello.router, prefix="/api/v1", tags=["hello"])
+        self.app.include_router(hello.router, prefix=API_V1_PREFIX, tags=["hello"])
+        self.app.include_router(users.router, prefix=API_V1_PREFIX, tags=["users"])
 
     def run(self, host: str = None, port: int = None, reload: bool = None):
         """Run the FastAPI server.
