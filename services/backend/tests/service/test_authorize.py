@@ -24,11 +24,15 @@ def authenticate_as(monkeypatch, user: User) -> dict:
     return {"Authorization": "Bearer fake-credential", "Authorization-Provider": "google"}
 
 
-def test_unauthenticated_caller_is_forbidden(test_client):
-    """Test that an unauthenticated caller cannot read a user profile."""
+def test_unauthenticated_caller_gets_not_found(test_client):
+    """Test that an unauthenticated caller sees a denied resource as not found, not forbidden.
+
+    This keeps an unauthenticated caller from being able to tell a resource that exists but
+    denies them apart from one that doesn't exist at all.
+    """
     response = test_client.get(f"/api/v1/users/{OWNER.id}")
-    assert response.status_code == 403
-    assert response.json()["detail"] == "Not authorized to perform `get_by_id` on this resource."
+    assert response.status_code == 404
+    assert response.json()["detail"] == "Not found."
 
 
 def test_authenticated_caller_can_get_another_user(test_client, monkeypatch):
@@ -107,8 +111,18 @@ def test_unroutable_requests_are_untouched(test_client):
     assert test_client.get("/api/v1/not-a-route").status_code == 404
 
 
-def test_forbidden_response_carries_cors_headers(test_client):
+def test_forbidden_response_carries_cors_headers(test_client, monkeypatch):
     """Test that CORS middleware still wraps a rejected request, so browsers see the 403."""
-    response = test_client.get(f"/api/v1/users/{OWNER.id}", headers={"Origin": "https://example.com"})
+    headers = authenticate_as(monkeypatch, OTHER)
+    headers["Origin"] = "https://example.com"
+
+    response = test_client.delete(f"/api/v1/users/{OWNER.id}", headers=headers)
     assert response.status_code == 403
+    assert response.headers["access-control-allow-origin"] == "https://example.com"
+
+
+def test_not_found_response_carries_cors_headers(test_client):
+    """Test that CORS middleware still wraps the unauthenticated not-found response."""
+    response = test_client.get(f"/api/v1/users/{OWNER.id}", headers={"Origin": "https://example.com"})
+    assert response.status_code == 404
     assert response.headers["access-control-allow-origin"] == "https://example.com"

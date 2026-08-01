@@ -30,7 +30,7 @@ Unauthenticated callers are denied every action.
 1. Each protected route is described by an `AuthorizationRule` — an HTTP method, a route path template, the `Resource.Action` that method performs, and a `resolver` that loads the targeted resource from the route's path parameters.
 2. On each request the middleware matches the request against the application's routes (routing has not run yet at middleware time) to recover the path template and its parameters, then looks up the rule for that method and path.
 3. The resolver loads the resource. If it does not exist, the request continues and the route handler reports it as `404` — the middleware only answers the authorization question.
-4. `resource.is_authorized(request.user, action)` decides: `403 Forbidden` when it returns False, otherwise the request continues to the handler.
+4. `resource.is_authorized(request.user, action)` decides whether the request continues to the handler. When it returns False: an **unauthenticated** caller gets `404 Not Found`, so they can't distinguish a resource that exists but denies them from one that doesn't exist at all; an **authenticated** caller gets `403 Forbidden`, since they're already identified and telling them the resource exists isn't a new leak.
 
 Requests matching no rule pass straight through — `GET /api/v1/hello` stays open, for example. A route becomes authorized by registering a rule for it, and each resource module builds its own rules (see `users.authorization_rules`), keeping method-to-action mapping next to the routes it describes.
 
@@ -42,7 +42,7 @@ Middleware runs in reverse registration order (last registered is outermost), so
 CORS → authentication (sets request.user) → authorization (checks the resource) → route handler
 ```
 
-CORS stays outermost so a `403` still carries CORS headers — otherwise a browser would surface the rejection as an opaque CORS error rather than a forbidden response.
+CORS stays outermost so a `403`/`404` from this middleware still carries CORS headers — otherwise a browser would surface the rejection as an opaque CORS error rather than a forbidden/not-found response.
 
 ## Endpoints
 
@@ -56,7 +56,7 @@ CORS stays outermost so a `403` still carries CORS headers — otherwise a brows
 
 Handlers get their storage backend from `_dependencies.get_user_storage`, which reads the `UserStorage` that `FastAPIService` was constructed with off `app.state` — the same instance the authorization resolvers use (see [User Storage](user-storage.md)).
 
-Because authorization is checked per instance, the middleware loads the targeted resource on every protected request — one storage read before the handler's own.
+Because authorization is checked per instance, the middleware loads the targeted resource on every protected request — one storage read before the handler's own. That double read is left as a `TODO` in `authorize.py` (cache the resolved resource on `request.state` and have handlers read it from there) — fine at current scale, worth revisiting if resource lookups get expensive.
 
 ## Adding a resource
 

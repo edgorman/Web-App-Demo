@@ -58,8 +58,15 @@ class AuthorizeMiddleware(BaseHTTPMiddleware):
             request: Incoming request, already resolved to a user by the authentication middleware
 
         Raises:
-            HTTPException: 403 when the resource does not authorize the caller for the action
+            HTTPException: 404 when the caller is unauthenticated and the resource does not
+                authorize them, so an unauthenticated caller can't tell a resource that
+                exists but denies them apart from one that doesn't exist at all; 403 when an
+                authenticated caller is denied
         """
+        # TODO: `rule.resolver` re-reads the resource that the handler will load again right
+        # after. Once a resource is resolved here, cache it on `request.state` and have
+        # handlers read it from there instead of hitting storage a second time. Leaving the
+        # double read in place for now since it's cheap at current scale.
         rule, path_params = self._get_rule(request)
         if rule is None:
             return
@@ -70,6 +77,8 @@ class AuthorizeMiddleware(BaseHTTPMiddleware):
             return
 
         if not resource.is_authorized(request.user, rule.action):
+            if not request.user.is_authenticated:
+                raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Not found.")
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail=f"Not authorized to perform `{rule.action.value}` on this resource.",
