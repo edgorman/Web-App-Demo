@@ -75,6 +75,7 @@ def test_user_can_delete_itself(test_client, user_storage, monkeypatch):
 
     response = test_client.delete(f"/api/v1/users/{OWNER.id}", headers=headers)
     assert response.status_code == 200
+    assert response.json()["data"] == {"id": OWNER.id}
     user_storage.delete.assert_called_once_with(OWNER.id)
 
 

@@ -49,18 +49,39 @@ Because dependencies run within the router, ordering against `add_authenticate_m
 
 ## Endpoints
 
-`src/service/fastapi/resources/v1/users.py` exposes the user resource under `/api/v1/users/{user_id}`:
+`src/service/fastapi/resources/v1/users.py` exposes the user resource under `/api/v1/users/{user_id}`. Each route module defines an `APIRouter` subclass — one per resource — following the shape used by [RecipeDex](https://github.com/edgorman/RecipeDex/blob/develop/backend/internal/service/fastapi/_resources/user.py):
 
-| Method | Action | Description |
-| --- | --- | --- |
-| `GET` | `get_by_id` | Fetch a user profile |
-| `PATCH` | `update_field` | Update `name` and/or `email`; omitted fields are left unchanged |
-| `DELETE` | `delete` | Delete a user profile |
+```python
+class UserResource(APIRouter):
+    def __init__(self, user_storage: UserStorage):
+        super().__init__(prefix="/users")
+        self.__user_storage = user_storage
+        self.add_api_route("/{user_id}", self.get_by_id, methods=["GET"], response_model=Response[GetUserResponse])
+        ...
 
-Its `resolve_user` dependency loads the user via `_dependencies.get_user_storage`, which reads the `UserStorage` that `FastAPIService` was constructed with off `app.state` (see [User Storage](user-storage.md)). Because `authorize` returns the resolved resource, route handlers take it as a parameter (e.g. `user: User = Depends(authorize(...))`) instead of loading it again — one storage read per protected request, not two.
+    def get_by_id(self, user: User = Depends(authorize(User.Action.GET_BY_ID, resolve_user))) -> ...:
+        ...
+```
+
+- **The repository handler is constructed once and passed in.** `FastAPIService.__init__` builds `UserResource(user_storage)` where it mounts the resource — the class never reaches for storage on its own. Route methods that write (`update_field`, `delete`) use `self.__user_storage` directly, ordinary attribute access with no FastAPI machinery involved.
+- **Each path is a public method.** `get_by_id`, `update_field`, `delete` are real, individually callable/testable methods, registered in `__init__` via `self.add_api_route(path, self.<method>, methods=[...], response_model=...)` rather than `@router.get(...)` decorators — decorators would run at class-definition time, before an instance (and its storage handler) exists.
+- **No `__preprocess`.** Unlike RecipeDex's version, there's no single method combining validation, existence-checking and authorization — that's what `authenticate` (middleware, sets `request.user`) and `authorize` (dependency, checks the resolved resource) already do. Route methods only contain the resource's own business logic.
+- **`resolve_user` stays a plain function, not a method.** It's referenced as a parameter default (`Depends(authorize(User.Action.GET_BY_ID, resolve_user))`) on methods defined at class body level, which — like any Python default argument — is evaluated once when the class is defined, before any `UserResource` instance exists. A method resolver (`self.resolve_user`) isn't reachable from there, so `resolve_user` reads storage the same way `_dependencies.get_user_storage` always has: off `app.state`, set once in `FastAPIService.__init__` alongside constructing `UserResource` itself.
+- **Explicit request/response schemas per path.** `GetUserResponse`, `UpdateUserRequest`, `UpdateUserResponse` and `DeleteUserResponse` are small `pydantic.BaseModel`s (`ConfigDict(from_attributes=True)` for the response ones, built with `SomeResponse.model_validate(user)`) declared next to the routes that use them, decoupling the API's field-level contract from the `User` domain object — even where today they happen to mirror it 1:1.
+
+| Method | Action | Request | Response |
+| --- | --- | --- | --- |
+| `GET` | `get_by_id` | — | `GetUserResponse` |
+| `PATCH` | `update_field` | `UpdateUserRequest` | `UpdateUserResponse` |
+| `DELETE` | `delete` | — | `DeleteUserResponse` |
+
+Because `authorize` returns the resolved resource, route methods take it as a parameter (`user: User = Depends(authorize(...))`) instead of loading it again — one storage read per protected request, not two.
 
 ## Adding a resource
 
 1. Add the object under `src/objects/`, subclassing `Resource` and overriding `Action` and `is_user_authorized`.
-2. Add the route module under `src/service/fastapi/resources/v1/`, exposing an `APIRouter` plus a `resolve_<resource>(...)` dependency that loads it from its path parameter(s).
-3. Have each protected route depend on `authorize(<Resource>.Action.<ACTION>, resolve_<resource>)` and take its result as a parameter, instead of loading the resource itself.
+2. Add a route module under `src/service/fastapi/resources/v1/` defining:
+   - request/response schemas for each path;
+   - a plain `resolve_<resource>(...)` dependency function that loads it from its path parameter(s), reading any storage via `Depends(get_<resource>_storage)`;
+   - a `<Resource>Resource(APIRouter)` class whose `__init__` takes the repository handler(s) it needs, registers each path via `self.add_api_route(...)`, and exposes one public method per path — each depending on `authorize(<Resource>.Action.<ACTION>, resolve_<resource>)` for the ones that need it.
+3. In `FastAPIService.__init__`, construct `<Resource>Resource(<handler>)` and `include_router` it where the other resources are mounted.
