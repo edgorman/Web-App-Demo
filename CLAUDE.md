@@ -82,6 +82,7 @@ services/backend/
 │   │   └── fastapi/
 │   │       ├── api.py             # FastAPIService, implements APIServiceInterface
 │   │       ├── middleware/        # e.g. auth.py, cors.py
+│   │       ├── dependencies/      # e.g. authorize.py
 │   │       └── resources/v1/      # one router module per resource
 │   └── storage/                   # persistence interfaces + backends (e.g. firestore/)
 └── tests/                         # mirrors src/ 1:1, plus conftest.py
@@ -89,8 +90,9 @@ services/backend/
 
 - `src/service/api.py` defines `APIServiceInterface` (ABC); `src/service/fastapi/api.py`'s `FastAPIService` implements it. Any new API framework would implement the same interface — call sites should depend on the interface, not on FastAPI directly.
 - `src/config/service.py` uses pydantic-settings (`ServiceConfig`), reading `.env` with `SERVICE__<section>__<field>` env vars (e.g. `SERVICE__FASTAPI__CORS__ALLOW_ORIGINS`) — double underscores separate nesting levels. Use `.env.example` as the template for new variables.
-- `src/objects/` holds pydantic data models (e.g. `Message`) — one object per file.
-- `src/service/fastapi/resources/v1/` holds versioned route modules, each exposing an `APIRouter` mounted under `/api/v1` in `FastAPIService.__init__`. All responses wrap the payload in the generic `Response[DataT]` model from `resources/v1/_objects.py` (adds `timestamp`, `success`, `message`).
+- `src/objects/` holds pydantic data models (e.g. `Message`) — one object per file. Models that requests act on subclass `Resource` (`src/objects/resource.py`), overriding its empty `Action` enum and its deny-by-default `is_user_authorized(user, action)` to declare who may do what (e.g. `User`).
+- `src/service/fastapi/dependencies/authorize.py` enforces those rules per route, as a FastAPI dependency rather than middleware: `authorize(action, resolver)` returns a dependency that resolves `resolver` (itself a dependency, e.g. loading a resource from a path parameter), then returns `403`/`404` when the resolved resource does not authorize `request.user`, or the resource otherwise. Routes depend on it directly (`Depends(authorize(...))`) instead of registering centrally — see `documentation/services/authorization.md`.
+- `src/service/fastapi/resources/v1/` holds versioned route modules. Each exposes a `<Resource>Resource(APIRouter)` class, constructed with whatever repository handler(s) it needs (e.g. `UserResource(user_storage)`) where `FastAPIService.__init__` mounts it under `/api/v1` — never fetched by the class itself. Routes are built and registered inside `__init__` (not as class-body methods) so a resolver used as a `Depends(authorize(...))` default can close over the constructor's handler(s) directly; each is still assigned to `self` as a public, individually callable method (e.g. `self.get_by_id`, `self.update_field`) before being registered via `self.add_api_route(path, self.<method>, ...)`. Each path has an explicit request/response `pydantic.BaseModel` rather than reusing the domain object directly. All responses wrap the payload in the generic `Response[DataT]` model from `resources/v1/_objects.py` (adds `timestamp`, `success`, `message`).
 - `src/storage/` is reserved for a future persistence layer: an abstract interface at the top level (e.g. `storage/foobar.py`) with concrete backends in subdirectories (e.g. `storage/firestore/foobar.py`), mirroring the `service/api.py` vs `service/fastapi/api.py` split. Storage files manage reading/writing of the pydantic object classes.
 - `tests/` mirrors `src/` 1:1; shared fixtures (`service_config`, `fastapi_service`, `test_client`) live in `tests/conftest.py`.
 

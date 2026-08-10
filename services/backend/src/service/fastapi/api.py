@@ -4,9 +4,12 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from src.service.api import APIServiceInterface
 from src.service.fastapi.middleware.authenticate import add_authenticate_middleware
-from src.service.fastapi.resources.v1 import hello
+from src.service.fastapi.resources.v1.hello import HelloResource
+from src.service.fastapi.resources.v1.users import UserResource
 from src.config.service import ServiceConfig
 from src.storage.user import UserStorage
+
+API_V1_PREFIX = "/api/v1"
 
 
 class FastAPIService(APIServiceInterface):
@@ -37,8 +40,13 @@ class FastAPIService(APIServiceInterface):
             allow_headers=self.config.cors.allow_headers,
         )
 
-        # Include routers with /api/v1 prefix
-        self.app.include_router(hello.router, prefix="/api/v1", tags=["hello"])
+        # Include resources with /api/v1 prefix. Each protected route enforces its own
+        # authorization via the `authorize` dependency (see
+        # src/service/fastapi/dependencies/authorize.py) rather than a central rule set —
+        # it runs after routing, so it needs no ordering against the middleware above beyond
+        # authentication having already set `request.user`.
+        self.app.include_router(HelloResource(), prefix=API_V1_PREFIX, tags=["hello"])
+        self.app.include_router(UserResource(user_storage), prefix=API_V1_PREFIX, tags=["users"])
 
     def run(self, host: str = None, port: int = None, reload: bool = None):
         """Run the FastAPI server.
