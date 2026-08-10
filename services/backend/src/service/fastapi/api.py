@@ -28,9 +28,6 @@ class FastAPIService(APIServiceInterface):
             version=self.config.app_version,
         )
 
-        # Expose storage to route handlers via `_dependencies.get_user_storage`
-        self.app.state.user_storage = user_storage
-
         # Add authentication middleware (Google Sign-In, for now)
         add_authenticate_middleware(self.app, config.auth.google.client_id, user_storage)
 
