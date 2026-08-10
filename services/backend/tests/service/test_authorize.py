@@ -1,4 +1,4 @@
-"""Test authorization middleware over the user resource."""
+"""Test the `authorize` dependency wired into the user resource's routes."""
 import pytest
 from src.objects.user import User
 from src.service.fastapi.middleware import authenticate as authenticate_middleware
@@ -88,7 +88,7 @@ def test_user_cannot_delete_another_user(test_client, user_storage, monkeypatch)
 
 
 def test_unknown_user_is_not_found(test_client, monkeypatch):
-    """Test that a request for a user who does not exist reaches the handler as a 404."""
+    """Test that a request for a user who does not exist is rejected as not found."""
     headers = authenticate_as(monkeypatch, OWNER)
 
     response = test_client.get("/api/v1/users/does-not-exist", headers=headers)
@@ -101,8 +101,8 @@ def test_unknown_user_is_not_found_when_unauthenticated(test_client):
     assert response.status_code == 404
 
 
-def test_routes_without_a_rule_are_untouched(test_client):
-    """Test that endpoints with no authorization rule stay open."""
+def test_routes_without_the_authorize_dependency_are_untouched(test_client):
+    """Test that endpoints not depending on `authorize` stay open."""
     assert test_client.get("/api/v1/hello").status_code == 200
 
 

@@ -1,6 +1,6 @@
 # Authorization
 
-Authentication answers *who is calling* (see [Google Sign-In](google-sign-in.md)); authorization answers *what that caller may do to a given thing*. The rules live on the thing itself — a **resource** — and are enforced by middleware before any route handler runs, so a handler never has to repeat them.
+Authentication answers *who is calling* (see [Google Sign-In](google-sign-in.md)); authorization answers *what that caller may do to a given thing*. The rules live on the thing itself — a **resource** — and are enforced by a FastAPI dependency before any route handler runs, so a handler never has to repeat them.
 
 ## Resources
 
@@ -23,26 +23,29 @@ The `user` argument is the caller, authenticated or not — either a `User` or S
 
 Unauthenticated callers are denied every action.
 
-## Middleware
+## The `authorize` dependency
 
-`src/service/fastapi/middleware/authorize.py` enforces those rules per HTTP request:
+`src/service/fastapi/dependencies/authorize.py` enforces those rules per route, as an ordinary FastAPI dependency rather than middleware:
 
-1. Each protected route is described by an `AuthorizationRule` — an HTTP method, a route path template, the `Resource.Action` that method performs, and a `resolver` that loads the targeted resource from the route's path parameters.
-2. On each request the middleware matches the request against the application's routes (routing has not run yet at middleware time) to recover the path template and its parameters, then looks up the rule for that method and path.
-3. The resolver loads the resource. If it does not exist, the request continues and the route handler reports it as `404` — the middleware only answers the authorization question.
-4. `resource.is_user_authorized(request.user, action)` decides whether the request continues to the handler. When it returns False: an **unauthenticated** caller gets `404 Not Found`, so they can't distinguish a resource that exists but denies them from one that doesn't exist at all; an **authenticated** caller gets `403 Forbidden`, since they're already identified and telling them the resource exists isn't a new leak.
-
-Requests matching no rule pass straight through — `GET /api/v1/hello` stays open, for example. A route becomes authorized by registering a rule for it, and each resource module builds its own rules (see `users.authorization_rules`), keeping method-to-action mapping next to the routes it describes.
-
-### Middleware ordering
-
-Middleware runs in reverse registration order (last registered is outermost), so `FastAPIService.__init__` registers authorization **before** authentication. The resulting request path is:
-
-```
-CORS → authentication (sets request.user) → authorization (checks the resource) → route handler
+```python
+def authorize(action: Resource.Action, resolver: Callable[..., Optional[Resource]]) -> Callable[..., Resource]:
+    def dependency(request: Request, resource: Optional[Resource] = Depends(resolver)) -> Resource:
+        ...
+    return dependency
 ```
 
-CORS stays outermost so a `403`/`404` from this middleware still carries CORS headers — otherwise a browser would surface the rejection as an opaque CORS error rather than a forbidden/not-found response.
+- `resolver` is itself a dependency — it declares whatever path parameters and dependencies it needs to load the resource (e.g. `resolve_user(user_id: str, user_storage: UserStorage = Depends(get_user_storage))`), the same as any other FastAPI dependency. `authorize` wires it in as `Depends(resolver)`, so FastAPI resolves it after routing, with path parameters already parsed and validated — no manual request-to-route matching needed.
+- A route protects itself by depending on `authorize(action, resolver)`'s return value instead of loading the resource directly, e.g. `user: User = Depends(authorize(User.Action.GET_BY_ID, resolve_user))`. The handler receives the already-authorized resource, so it never re-reads it.
+- If `resolver` returns `None`, the request is rejected as `404 Not Found` before the handler runs.
+- Otherwise `resource.is_user_authorized(request.user, action)` decides: an **unauthenticated** caller who's denied gets `404 Not Found`, so they can't distinguish a resource that exists but denies them from one that doesn't exist at all; an **authenticated** caller who's denied gets `403 Forbidden`, since they're already identified and telling them the resource exists isn't a new leak.
+
+A route with no `authorize(...)` dependency is simply unprotected — `GET /api/v1/hello` stays open, for example.
+
+### Why a dependency instead of middleware
+
+Starlette/FastAPI middleware (`app.add_middleware`) wraps the *entire* app, including the router — it runs before routing, so it has no access to matched path parameters and would need to duplicate route matching itself to find them. FastAPI dependencies run *after* routing, as part of resolving a specific endpoint, so they get path parameters for free and can still raise `HTTPException` to block the request before the handler runs. That makes them the natural fit here, at the cost of declaring authorization per route (via `Depends(...)`) rather than in one central rule list — `resolver` functions are trivial to write and share, so this doesn't add much duplication in practice.
+
+Because dependencies run within the router, ordering against `add_authenticate_middleware` (still real middleware) takes care of itself: middleware always finishes running — setting `request.user` — before any dependency resolution begins, so `authorize` never needs explicit registration-order reasoning the way middleware does. CORS middleware still wraps everything, so a `403`/`404` raised by `authorize` still carries CORS headers.
 
 ## Endpoints
 
@@ -54,12 +57,10 @@ CORS stays outermost so a `403`/`404` from this middleware still carries CORS he
 | `PATCH` | `update_field` | Update `name` and/or `email`; omitted fields are left unchanged |
 | `DELETE` | `delete` | Delete a user profile |
 
-Handlers get their storage backend from `_dependencies.get_user_storage`, which reads the `UserStorage` that `FastAPIService` was constructed with off `app.state` — the same instance the authorization resolvers use (see [User Storage](user-storage.md)).
-
-Because authorization is checked per instance, the middleware loads the targeted resource on every protected request — one storage read before the handler's own. That double read is left as a `TODO` in `authorize.py` (cache the resolved resource on `request.state` and have handlers read it from there) — fine at current scale, worth revisiting if resource lookups get expensive.
+Its `resolve_user` dependency loads the user via `_dependencies.get_user_storage`, which reads the `UserStorage` that `FastAPIService` was constructed with off `app.state` (see [User Storage](user-storage.md)). Because `authorize` returns the resolved resource, route handlers take it as a parameter (e.g. `user: User = Depends(authorize(...))`) instead of loading it again — one storage read per protected request, not two.
 
 ## Adding a resource
 
 1. Add the object under `src/objects/`, subclassing `Resource` and overriding `Action` and `is_user_authorized`.
-2. Add the route module under `src/service/fastapi/resources/v1/`, exposing an `APIRouter` plus an `authorization_rules(...)` function returning one `AuthorizationRule` per protected route.
-3. In `src/service/fastapi/api.py`, include the router and pass its rules to `add_authorize_middleware`.
+2. Add the route module under `src/service/fastapi/resources/v1/`, exposing an `APIRouter` plus a `resolve_<resource>(...)` dependency that loads it from its path parameter(s).
+3. Have each protected route depend on `authorize(<Resource>.Action.<ACTION>, resolve_<resource>)` and take its result as a parameter, instead of loading the resource itself.
