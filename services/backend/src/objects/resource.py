@@ -21,13 +21,13 @@ class Resource(ABC):
     """Base class for anything a request can act on, carrying its own authorization rules.
 
     Implementations declare the actions they support by overriding the nested `Action`
-    enum, and the rules for those actions by overriding `is_authorized`.
+    enum, and the rules for those actions by overriding `is_user_authorized`.
     """
 
     class Action(Enum):
         """Actions available on a resource — empty here, overridden by implementations."""
 
-    def is_authorized(self, user: AuthorizableUser, action: "Resource.Action") -> bool:
+    def is_user_authorized(self, user: AuthorizableUser, action: "Resource.Action") -> bool:
         """Check whether a user may perform an action on this resource.
 
         Denies everything by default, so a resource is only ever accessible through rules

@@ -42,7 +42,7 @@ def test_user_actions():
 def test_user_authorizes_itself(action):
     """Test that a user is authorized for every action on their own profile."""
     user = User(id="123", email="user@example.com", name="Test User")
-    assert user.is_authorized(user, action) is True
+    assert user.is_user_authorized(user, action) is True
 
 
 def test_user_authorizes_other_users_to_read_only():
@@ -50,16 +50,16 @@ def test_user_authorizes_other_users_to_read_only():
     user = User(id="123", email="user@example.com", name="Test User")
     other = User(id="456", email="other@example.com", name="Other User")
 
-    assert user.is_authorized(other, User.Action.GET_BY_ID) is True
-    assert user.is_authorized(other, User.Action.UPDATE_FIELD) is False
-    assert user.is_authorized(other, User.Action.DELETE) is False
+    assert user.is_user_authorized(other, User.Action.GET_BY_ID) is True
+    assert user.is_user_authorized(other, User.Action.UPDATE_FIELD) is False
+    assert user.is_user_authorized(other, User.Action.DELETE) is False
 
 
 @pytest.mark.parametrize("action", list(User.Action))
 def test_user_denies_unauthenticated_callers(action):
     """Test that an unauthenticated caller is denied every action."""
     user = User(id="123", email="user@example.com", name="Test User")
-    assert user.is_authorized(UnauthenticatedUser(), action) is False
+    assert user.is_user_authorized(UnauthenticatedUser(), action) is False
 
 
 def test_user_denies_unknown_actions():
@@ -68,4 +68,4 @@ def test_user_denies_unknown_actions():
         UNKNOWN = "unknown"
 
     user = User(id="123", email="user@example.com", name="Test User")
-    assert user.is_authorized(user, OtherAction.UNKNOWN) is False
+    assert user.is_user_authorized(user, OtherAction.UNKNOWN) is False

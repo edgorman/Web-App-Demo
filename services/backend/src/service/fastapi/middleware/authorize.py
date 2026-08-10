@@ -76,7 +76,7 @@ class AuthorizeMiddleware(BaseHTTPMiddleware):
             # Nothing to authorize against — let the route handler report it as not found.
             return
 
-        if not resource.is_authorized(request.user, rule.action):
+        if not resource.is_user_authorized(request.user, rule.action):
             if not request.user.is_authenticated:
                 raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Not found.")
             raise HTTPException(
@@ -98,6 +98,9 @@ class AuthorizeMiddleware(BaseHTTPMiddleware):
         """
         for route in request.app.routes:
             match, child_scope = route.matches(request.scope)
+            # Match.FULL means both the path and the HTTP method matched this route.
+            # Match.PARTIAL (path matches, method doesn't — Starlette's signal to eventually
+            # return 405) and Match.NONE (no match) both mean this isn't the request's route.
             if match != Match.FULL:
                 continue
             path_params = child_scope.get("path_params", {})

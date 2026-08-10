@@ -23,8 +23,8 @@ def test_resource_denies_by_default():
     resource = ExampleResource()
     user = User(id="123", email="user@example.com", name="Test User")
 
-    assert resource.is_authorized(user, ExampleResource.Action.READ) is False
-    assert resource.is_authorized(UnauthenticatedUser(), ExampleResource.Action.READ) is False
+    assert resource.is_user_authorized(user, ExampleResource.Action.READ) is False
+    assert resource.is_user_authorized(UnauthenticatedUser(), ExampleResource.Action.READ) is False
 
 
 def test_resource_implementations_extend_the_action_enum():
@@ -36,7 +36,7 @@ def test_resource_implementations_extend_the_action_enum():
 def test_resource_implementations_can_authorize():
     """Test that an implementation can override the default deny."""
     class AlwaysAuthorized(ExampleResource):
-        def is_authorized(self, user, action):
+        def is_user_authorized(self, user, action):
             return action == ExampleResource.Action.READ
 
-    assert AlwaysAuthorized().is_authorized(UnauthenticatedUser(), ExampleResource.Action.READ) is True
+    assert AlwaysAuthorized().is_user_authorized(UnauthenticatedUser(), ExampleResource.Action.READ) is True

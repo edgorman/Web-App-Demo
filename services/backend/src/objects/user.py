@@ -25,7 +25,7 @@ class User(Resource, BaseModel):
     def display_name(self) -> str:
         return self.name
 
-    def is_authorized(self, user: AuthorizableUser, action: Resource.Action) -> bool:
+    def is_user_authorized(self, user: AuthorizableUser, action: Resource.Action) -> bool:
         """Check whether a user may perform an action on this user profile.
 
         Any authenticated user may look up a profile by id, but only the user themselves
