@@ -8,7 +8,7 @@ resource "google_service_account" "backend" {
 }
 
 # Grants the backend read/write access to Firestore, so it can persist and
-# look up authenticated users (see services/backend/src/storage/firestore/user.py).
+# look up authenticated users (see services/backend/internal/storage/firestore/user.go).
 resource "google_project_iam_member" "backend_firestore_access" {
   project = var.project_id
   role    = "roles/datastore.user"

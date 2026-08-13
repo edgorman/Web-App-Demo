@@ -1,41 +1,23 @@
-# Build stage - Install dependencies
-ARG PYTHON_VERSION=3.13
-FROM python:${PYTHON_VERSION}-slim AS builder
+# Build stage - compile a static binary
+ARG GO_VERSION=1.25
+FROM golang:${GO_VERSION} AS builder
 
-# Install uv
-COPY --from=ghcr.io/astral-sh/uv:latest /uv /usr/local/bin/uv
-
-# Set working directory
 WORKDIR /app
 
-# Copy dependency files
-COPY pyproject.toml ./
+# Download dependencies first so they stay cached while only sources change.
+COPY go.mod go.sum ./
+RUN go mod download
 
-# Install dependencies using uv
-RUN uv sync --no-dev
+COPY main.go ./
+COPY internal ./internal
 
-# Runtime stage
-FROM python:${PYTHON_VERSION}-slim
+# CGO is disabled so the binary runs on a distroless static base with no libc.
+RUN CGO_ENABLED=0 GOOS=linux go build -trimpath -ldflags="-s -w" -o /backend .
 
-# Set working directory
-WORKDIR /app
-
-# Set Python version environment variable
-ENV PYTHON_VERSION=${PYTHON_VERSION}
-
-# Copy virtual environment from builder
-COPY --from=builder /app/.venv /app/.venv
-
-# Copy application code
-COPY src ./src
-
-# Set environment variables
-ENV PATH="/app/.venv/bin:$PATH"
-ENV PYTHONUNBUFFERED=1
-
-# Expose port (can be overridden by SERVICE__FASTAPI__PORT env var)
+# Runtime stage - distroless static, which ships CA certificates and runs as non-root
+FROM gcr.io/distroless/static-debian12:nonroot
+COPY --from=builder /backend /backend
 ARG PORT=8080
 EXPOSE ${PORT}
-
-# Run the application
-CMD ["python", "-m", "src.cli.cli", "run"]
+ENTRYPOINT ["/backend"]
+CMD ["run"]

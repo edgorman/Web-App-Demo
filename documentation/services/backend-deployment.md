@@ -4,7 +4,7 @@ This document describes the Cloud Run infrastructure for deploying the backend s
 
 ## Overview
 
-The backend service is a FastAPI application deployed to Google Cloud Run. It's containerized using Docker and deployed automatically through Terraform infrastructure as code.
+The backend service is a Go application deployed to Google Cloud Run. It's containerized using Docker and deployed automatically through Terraform infrastructure as code.
 
 ## Architecture
 
@@ -25,9 +25,9 @@ The backend service is a FastAPI application deployed to Google Cloud Run. It's 
   - Prod: 10
 
 ### Access Control
-- **Public Access**: Allowed - `allUsers` has `roles/run.invoker`. This is required, not incidental: the frontend is a static SPA and calls the backend straight from the user's browser with no GCP credentials, so Cloud Run sees anonymous traffic. Without this binding every browser request is rejected with a 403 before FastAPI runs, and because that response carries no CORS headers the browser reports it as a CORS error.
+- **Public Access**: Allowed - `allUsers` has `roles/run.invoker`. This is required, not incidental: the frontend is a static SPA and calls the backend straight from the user's browser with no GCP credentials, so Cloud Run sees anonymous traffic. Without this binding every browser request is rejected with a 403 before the backend runs, and because that response carries no CORS headers the browser reports it as a CORS error.
 - **Frontend Service Account**: The frontend Cloud Run service's service account also has `roles/run.invoker`. This covers server-side service-to-service calls only — it is not what allows the browser traffic through.
-- **Application-layer control**: The FastAPI CORS middleware restricts which origins browsers will permit to call the API. Terraform is the source of truth for this, injecting the frontend's URLs via the `SERVICE__FASTAPI__CORS__ALLOW_ORIGINS` environment variable.
+- **Application-layer control**: The backend's CORS middleware restricts which origins browsers will permit to call the API. Terraform is the source of truth for this, injecting the frontend's URLs via the `SERVICE__HTTP__CORS__ALLOW_ORIGINS` environment variable.
 
 Note that CORS is a browser-enforced control, not a server-side authorisation
 control — it stops other websites from reading the API from a user's browser, but
@@ -114,7 +114,7 @@ When backend service files are changed and pushed:
 
 ## Accessing the Service
 
-The backend service is reachable directly over HTTPS, since the frontend calls it from the user's browser. Which origins browsers will allow to call it is controlled by the FastAPI CORS allow-list.
+The backend service is reachable directly over HTTPS, since the frontend calls it from the user's browser. Which origins browsers will allow to call it is controlled by the backend's CORS allow-list.
 
 After deployment, the service URL is available as a Terraform output:
 
@@ -180,7 +180,7 @@ Development environment with min_instances=0 only incurs costs during active use
 
 **Issue: CORS error in the browser**
 - First confirm it is actually CORS and not a 403 from Cloud Run IAM. Open the backend URL directly, or check the response status: a Cloud Run IAM rejection returns 403 with no `Access-Control-Allow-Origin` header, which the browser reports as a CORS failure.
-- If the request reaches FastAPI, check that `SERVICE__FASTAPI__CORS__ALLOW_ORIGINS` on the deployed revision contains the frontend's origin. Terraform sets this from `google_cloud_run_v2_service.frontend.urls`.
+- If the request reaches the backend, check that `SERVICE__HTTP__CORS__ALLOW_ORIGINS` on the deployed revision contains the frontend's origin. Terraform sets this from `google_cloud_run_v2_service.frontend.urls`.
 
 **Issue: Cold starts taking too long**
 - Consider increasing `backend_min_instances` in tfvars
@@ -190,11 +190,11 @@ Development environment with min_instances=0 only incurs costs during active use
 ## Security Considerations
 
 ### Current Configuration
-- ✅ Container runs as non-root user (configured in Dockerfile)
+- ✅ Container runs as non-root user (distroless `nonroot` runtime image)
 - ✅ HTTPS enforced (automatic with Cloud Run)
 - ✅ Custom service account with minimal permissions (follows GCP best practices)
 - ⚠️ Public at the Cloud Run IAM layer (`allUsers` → `roles/run.invoker`), required for the browser-based frontend
-- ✅ Origin restrictions enforced by the FastAPI CORS allow-list, managed by Terraform
+- ✅ Origin restrictions enforced by the backend's CORS allow-list, managed by Terraform
 
 ### Service Account
 The backend service uses a dedicated custom service account (`backend-sa`) instead of the default Compute Engine service account. This follows the principle of least privilege and GCP security best practices:

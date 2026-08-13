@@ -35,7 +35,7 @@ Note: Project-level IAM permissions for the GitHub Actions service account are m
 The infrastructure implements a secure access control model for Cloud Run services:
 
 - **Frontend Service**: Publicly accessible (`allUsers` has `roles/run.invoker`)
-- **Backend Service**: Also reachable by `allUsers` at the Cloud Run IAM layer, because the frontend calls it directly from the user's browser. Access is constrained at the application layer instead, by the FastAPI CORS allow-list.
+- **Backend Service**: Also reachable by `allUsers` at the Cloud Run IAM layer, because the frontend calls it directly from the user's browser. Access is constrained at the application layer instead, by the backend's CORS allow-list.
 
 The frontend is a static single-page app: nginx serves the built assets and does
 not proxy API requests, so `fetch` calls run in the end user's browser with no

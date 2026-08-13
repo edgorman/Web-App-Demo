@@ -12,7 +12,7 @@ resource "google_cloud_run_v2_service" "backend" {
       image = var.backend_image
 
       env {
-        name  = "SERVICE__FASTAPI__CORS__ALLOW_ORIGINS"
+        name  = "SERVICE__HTTP__CORS__ALLOW_ORIGINS"
         value = jsonencode(google_cloud_run_v2_service.frontend.urls)
       }
 
@@ -95,12 +95,12 @@ resource "google_cloud_run_v2_service_iam_member" "backend_frontend_access" {
 # backend. The frontend fetches the backend directly from the user's browser
 # using the build-time VITE_BACKEND_URL, with no credentials attached. Without
 # an `allUsers` invoker binding, Cloud Run rejects those requests with a 403 at
-# the edge before FastAPI runs. That 403 carries no CORS headers, so the browser
-# surfaces it as a CORS error rather than as an auth failure — which is exactly
-# how this presents when the binding is missing.
+# the edge before the backend runs. That 403 carries no CORS headers, so the
+# browser surfaces it as a CORS error rather than as an auth failure — which is
+# exactly how this presents when the binding is missing.
 #
-# The backend is not left unprotected by this: the FastAPI CORS middleware is
-# configured from Terraform (see SERVICE__FASTAPI__CORS__ALLOW_ORIGINS above)
+# The backend is not left unprotected by this: the backend's CORS middleware is
+# configured from Terraform (see SERVICE__HTTP__CORS__ALLOW_ORIGINS above)
 # and restricts which origins browsers will let call it.
 resource "google_cloud_run_v2_service_iam_member" "backend_public_access" {
   depends_on = [google_cloud_run_v2_service.backend]
