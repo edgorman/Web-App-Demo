@@ -4,15 +4,23 @@ help: ## show this help message
 
 .PHONY: install
 install: ## install dependencies
-	uv sync --extra dev
+	go mod download
 
 .PHONY: lint
 lint: ## lint the code
-	uv run flake8 . --exclude .venv --max-line-length 120
+	@unformatted=$$(gofmt -l .); \
+	if [ -n "$$unformatted" ]; then \
+		echo "gofmt needed for:"; echo "$$unformatted"; exit 1; \
+	fi
+	go vet ./...
+
+.PHONY: format
+format: ## format the code
+	gofmt -w .
 
 .PHONY: test
 test: ## run tests
-	uv run pytest
+	go test ./...
 
 .PHONY: docker-build
 docker-build: ## build docker image (use IMAGE_TAG variable for tag)
@@ -20,4 +28,4 @@ docker-build: ## build docker image (use IMAGE_TAG variable for tag)
 
 .PHONY: run
 run: ## run the backend service
-	uv run python -m src.cli.cli run
+	go run . run

@@ -24,7 +24,7 @@ variable "backend_service_name" {
 variable "backend_port" {
   description = "The port the backend container listens on"
   type        = number
-  default     = 8000
+  default     = 8080
 }
 
 variable "backend_cpu" {

@@ -5,12 +5,14 @@ Authenticated user profiles are persisted to [Firestore](https://cloud.google.co
 ## How it works
 
 1. `infrastructure/env/gcp_firestore.tf` provisions one Firestore (Native mode) database per environment, named `<project-id>-database` (e.g. `web-app-demo-dev-database`).
-2. `src/storage/user.py` defines `UserStorage`, an abstract interface with `get` / `create` / `update` / `delete`, following the `src/storage/` interface-then-implementation convention documented in the root `CLAUDE.md`.
-3. `src/storage/firestore/user.py`'s `FirestoreUserStorage` implements it against a `google.cloud.firestore.Client`, storing each user as a document in a `users` collection keyed by the user's id.
-4. `src/cli/cli.py`'s `run` command constructs the Firestore client (from `SERVICE__STORAGE__FIRESTORE__PROJECT_ID` / `SERVICE__STORAGE__FIRESTORE__DATABASE`) and injects `FirestoreUserStorage` into `FastAPIService`, which passes it on to the authentication middleware (`src/service/fastapi/middleware/authenticate.py`).
-5. On every successfully-verified request (see [Google Sign-In](google-sign-in.md)), the middleware looks the user up by id: if it's their first sign-in, it creates the record; otherwise it updates it with the latest name/email from the provider token. Either way, the persisted `User` becomes `request.user`.
+2. `internal/storage/user.go` defines `UserStorage`, an interface with `Get` / `Create` / `Update` / `Delete`, following the `internal/storage/` interface-then-implementation convention documented in the root `CLAUDE.md`.
+3. `internal/storage/firestore/user.go`'s `UserStorage` implements it against a `cloud.google.com/go/firestore.Client`, storing each user as a document in a `users` collection keyed by the user's id. `Create` writes the document outright; `Update` merges into it.
+4. `internal/cli/cli.go`'s `run` command constructs the Firestore client (from `SERVICE__STORAGE__FIRESTORE__PROJECT_ID` / `SERVICE__STORAGE__FIRESTORE__DATABASE`) and injects the Firestore-backed store into the API service, which passes it on to the authentication middleware (`internal/service/nethttp/middleware/authenticate.go`).
+5. On every successfully-verified request (see [Google Sign-In](google-sign-in.md)), the middleware looks the user up by id: if it's their first sign-in, it creates the record; otherwise it updates it with the latest name/email from the provider token. Either way, the persisted `User` is attached to the request context and read back by handlers via `middleware.UserFromContext`.
 
 This mirrors the storage split in [RecipeDex](https://github.com/edgorman/RecipeDex/blob/develop/backend/internal/storage/firestore/user.py) — an abstract interface at the top level of `storage/`, with a concrete Firestore backend beneath it — extended here to actually read and write documents rather than stub the methods out.
+
+The stored document shape is `{id, email, name}`. `objects.User` carries explicit `firestore:"..."` tags to keep those keys lowercase; without them the client would write the Go field names instead and fork the schema already in use.
 
 ## Configuration
 
@@ -29,6 +31,6 @@ The backend's Cloud Run service account (`backend-sa`) is granted `roles/datasto
 
 ### Local development
 
-Copy `.env.example` to `.env` in `services/backend/` and, if needed, fill in `SERVICE__STORAGE__FIRESTORE__PROJECT_ID` / `SERVICE__STORAGE__FIRESTORE__DATABASE`. Running the service locally against real Firestore requires [Application Default Credentials](https://cloud.google.com/docs/authentication/external/set-up-adc) (`gcloud auth application-default login`) with access to the target project; without them, `FirestoreClient` construction fails immediately on startup with `DefaultCredentialsError`.
+Copy `.env.example` to `.env` in `services/backend/` and, if needed, fill in `SERVICE__STORAGE__FIRESTORE__PROJECT_ID` / `SERVICE__STORAGE__FIRESTORE__DATABASE`. Running the service locally against real Firestore requires [Application Default Credentials](https://cloud.google.com/docs/authentication/external/set-up-adc) (`gcloud auth application-default login`) with access to the target project; without them, Firestore client construction fails immediately on startup with a credentials error.
 
-Tests never touch real Firestore: `tests/conftest.py`'s `user_storage` fixture is a `MagicMock(spec=UserStorage)`, injected via the `user_storage` / `fastapi_service` fixtures.
+Tests never touch real Firestore: they inject a hand-written fake implementing the `UserStorage` interface into the API service.
